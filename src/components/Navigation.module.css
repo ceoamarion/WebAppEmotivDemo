@@ -1,0 +1,76 @@
+.nav {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    background-color: rgba(17, 24, 39, 0.9);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid #374151;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.logoIcon {
+    font-size: 1.5rem;
+}
+
+.logoText {
+    font-size: 1.25rem;
+    font-weight: 700;
+    background: linear-gradient(to right, #60a5fa, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+.tabs {
+    display: flex;
+    gap: 0.25rem;
+    flex-wrap: wrap;
+}
+
+.tab {
+    padding: 0.5rem 1rem;
+    border-radius: 9999px;
+    border: 1px solid transparent;
+    background-color: transparent;
+    color: #9ca3af;
+    font-weight: 500;
+    font-size: 0.85rem;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.tab:hover {
+    color: #f3f4f6;
+    background-color: #1f2937;
+}
+
+.tab.active {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    color: white;
+    border-color: transparent;
+}
+
+@media (max-width: 800px) {
+    .nav {
+        flex-direction: column;
+        gap: 0.75rem;
+        padding: 0.75rem 1rem;
+    }
+
+    .tabs {
+        justify-content: center;
+    }
+
+    .tab {
+        padding: 0.4rem 0.75rem;
+        font-size: 0.75rem;
+    }
+}

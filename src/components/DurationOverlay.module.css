@@ -1,0 +1,261 @@
+/* Duration Overlay Styles */
+
+.overlay {
+    position: absolute;
+    top: 60px;
+    right: 1rem;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(10, 10, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    min-width: 180px;
+    max-width: 220px;
+    opacity: 0;
+    transform: translateY(-10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.overlay.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Tier Section */
+.tierSection {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tierHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.tierIcon {
+    font-size: 1rem;
+}
+
+.tierLabel {
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.duration {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+}
+
+.durationValue {
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    font-family: 'Consolas', monospace;
+}
+
+.durationLabel {
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Progress Section */
+.progressSection {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.progressHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.progressLabel {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.progressPercent {
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+    font-family: 'Consolas', monospace;
+}
+
+.progressBar {
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.progressFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease-out;
+}
+
+.timeRemaining {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-align: center;
+}
+
+/* Stability Section */
+.stabilitySection {
+    display: flex;
+    justify-content: space-between;
+    gap: 0.5rem;
+    padding: 0.25rem 0;
+}
+
+.stabilityItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+}
+
+.stabilityLabel {
+    font-size: 0.5rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.stabilityValue {
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+/* Microstate Badge */
+.microstateBadge {
+    padding: 0.2rem 0.5rem;
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 500;
+    text-align: center;
+}
+
+/* Transition Badge */
+.transitionBadge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-align: center;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.transitionBadge.accessing {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+}
+
+.transitionBadge.entering {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+.transitionBadge.sustaining {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+}
+
+.transitionBadge.unstable {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    animation: unstablePulse 1s infinite;
+}
+
+@keyframes unstablePulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* Compact Tier Badge for Cards */
+.tierBadgeCompact {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+    padding: 0.2rem 0.4rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 0.25rem;
+    border-left: 2px solid;
+}
+
+.tierBadgeIcon {
+    font-size: 0.7rem;
+}
+
+.tierBadgeText {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.tierBadgeDuration {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.8);
+    font-family: 'Consolas', monospace;
+}
+
+.tierBadgeProgress {
+    width: 30px;
+    height: 2px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.tierBadgeProgressFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease-out;
+}
+
+/* Responsive */
+@media (max-width: 900px) {
+    .overlay {
+        top: auto;
+        bottom: 1rem;
+        right: 1rem;
+        min-width: 160px;
+    }
+}
+
+@media (max-width: 600px) {
+    .overlay {
+        display: none;
+        /* Hide on very small screens */
+    }
+}

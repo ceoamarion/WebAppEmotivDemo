@@ -1,0 +1,101 @@
+.container {
+    background-color: #1f2937;
+    border-radius: 0.75rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    color: white;
+    border: 1px solid #374151;
+}
+
+.title {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: #e5e7eb;
+    border-bottom: 1px solid #374151;
+    padding-bottom: 0.5rem;
+}
+
+.infoGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+}
+
+.infoItem {
+    background-color: #111827;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.infoLabel {
+    color: #9ca3af;
+    font-size: 0.75rem;
+    margin-bottom: 0.25rem;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.infoValue {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #f3f4f6;
+    text-align: center;
+    word-break: break-all;
+}
+
+.sensors {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 0.5rem;
+}
+
+.sensorNode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 0.5rem;
+    background-color: #111827;
+    border-radius: 0.375rem;
+    font-size: 0.7rem;
+    color: #d1d5db;
+}
+
+.sensorValue {
+    width: 0.75rem;
+    height: 0.75rem;
+    border-radius: 50%;
+    margin-top: 0.25rem;
+}
+
+.good {
+    background-color: #22c55e;
+}
+
+.fair {
+    background-color: #eab308;
+}
+
+.poor {
+    background-color: #f97316;
+}
+
+.bad {
+    background-color: #ef4444;
+}
+
+.none {
+    background-color: #374151;
+}
+
+.sensorNote {
+    margin-top: 1rem;
+    font-size: 0.75rem;
+    color: #6b7280;
+    text-align: center;
+    font-style: italic;
+}

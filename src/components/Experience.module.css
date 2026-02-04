@@ -1,0 +1,758 @@
+.container {
+    position: relative;
+    width: 100%;
+    height: calc(100vh - 120px);
+    overflow: hidden;
+    background: #080810;
+}
+
+.canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 0;
+}
+
+/* ================================
+   POW BAR
+   ================================ */
+
+.powBar {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 0.5rem 1.5rem;
+    background: rgba(0, 0, 0, 0.6);
+    backdrop-filter: blur(8px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.powBar.powBarStale {
+    opacity: 0.6;
+}
+
+.powLabel {
+    font-size: 0.65rem;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    min-width: 32px;
+}
+
+.powBand {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    flex: 1;
+    max-width: 150px;
+}
+
+.powMeter {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.powFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.15s ease-out;
+}
+
+.powName {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 40px;
+}
+
+.powValue {
+    font-size: 0.75rem;
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+    min-width: 28px;
+    text-align: right;
+}
+
+.staleIndicator {
+    font-size: 0.9rem;
+    margin-left: auto;
+}
+
+/* ================================
+   OVERLAY
+   ================================ */
+
+.overlay {
+    position: absolute;
+    top: 40px;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    padding: 1.5rem 2rem;
+    pointer-events: none;
+    z-index: 10;
+}
+
+/* ================================
+   TOP BAR
+   ================================ */
+
+.topBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    pointer-events: auto;
+}
+
+.title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: white;
+    text-shadow: 0 0 20px rgba(100, 130, 200, 0.4);
+    margin: 0;
+}
+
+.startBtn {
+    padding: 0.75rem 1.75rem;
+    font-size: 0.95rem;
+    font-weight: 600;
+    background: linear-gradient(135deg, #4f46e5, #7c3aed);
+    color: white;
+    border: none;
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.3s;
+    box-shadow: 0 0 25px rgba(124, 58, 237, 0.3);
+}
+
+.startBtn:hover {
+    transform: scale(1.03);
+    box-shadow: 0 0 40px rgba(124, 58, 237, 0.5);
+}
+
+.stopBtn {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: rgba(80, 80, 100, 0.3);
+    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.stopBtn:hover {
+    background: rgba(80, 80, 100, 0.5);
+}
+
+.controlsGroup {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.sleepToggle {
+    padding: 0.5rem 1rem;
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: rgba(251, 191, 36, 0.15);
+    color: #fcd34d;
+    border: 1px solid rgba(251, 191, 36, 0.3);
+    border-radius: 9999px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.sleepToggle:hover {
+    background: rgba(251, 191, 36, 0.25);
+}
+
+.sleepToggle.sleepActive {
+    background: rgba(99, 102, 241, 0.25);
+    color: #a5b4fc;
+    border-color: rgba(99, 102, 241, 0.4);
+}
+
+.sleepToggle.sleepActive:hover {
+    background: rgba(99, 102, 241, 0.35);
+}
+
+.emotionToggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(80, 80, 100, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.emotionToggle:hover {
+    background: rgba(80, 80, 100, 0.5);
+}
+
+.emotionToggle.emotionActive {
+    background: rgba(168, 85, 247, 0.25);
+    color: #c4b5fd;
+    border-color: rgba(168, 85, 247, 0.4);
+}
+
+.emotionToggle.emotionActive:hover {
+    background: rgba(168, 85, 247, 0.35);
+}
+
+.durationToggle {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.1rem;
+    background: rgba(80, 80, 100, 0.3);
+    color: rgba(255, 255, 255, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.durationToggle:hover {
+    background: rgba(80, 80, 100, 0.5);
+}
+
+.durationToggle.durationActive {
+    background: rgba(59, 130, 246, 0.25);
+    color: #93c5fd;
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.durationToggle.durationActive:hover {
+    background: rgba(59, 130, 246, 0.35);
+}
+
+/* ================================
+   ORB AREA
+   ================================ */
+
+.orbArea {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 2.5rem;
+    padding: 2rem;
+    pointer-events: auto;
+}
+
+.leftCard,
+.rightCard {
+    flex: 0 0 220px;
+}
+
+.centerArea {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 1rem;
+}
+
+.orbPlaceholder {
+    width: 180px;
+    height: 180px;
+    pointer-events: none;
+}
+
+/* ================================
+   STATE CARD BASE
+   ================================ */
+
+.stateCard {
+    background: rgba(10, 10, 20, 0.75);
+    backdrop-filter: blur(12px);
+    border-radius: 0.875rem;
+    padding: 1.25rem;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-left-width: 4px;
+    min-height: 160px;
+    display: flex;
+    flex-direction: column;
+    gap: 0.6rem;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    cursor: pointer;
+}
+
+.stateCard:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(0, 0, 0, 0.3);
+}
+
+.stateCardTitle {
+    font-size: 0.6rem;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.stateCardName {
+    font-size: 1.15rem;
+    font-weight: 700;
+    line-height: 1.25;
+}
+
+/* ================================
+   CURRENT STATE CARD
+   ================================ */
+
+.currentCard {
+    background: rgba(10, 10, 20, 0.88);
+    box-shadow: 0 0 35px rgba(100, 100, 150, 0.12);
+}
+
+.confidenceRing {
+    position: relative;
+    width: 60px;
+    height: 60px;
+    margin: 0.25rem 0;
+}
+
+.ringChart {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+.ringBg {
+    fill: none;
+    stroke: rgba(255, 255, 255, 0.08);
+    stroke-width: 2.5;
+}
+
+.ringFill {
+    fill: none;
+    stroke-width: 2.5;
+    stroke-linecap: round;
+    transition: stroke-dasharray 0.4s ease;
+}
+
+.ringValue {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: white;
+    font-family: 'Consolas', monospace;
+}
+
+.lockedBadge {
+    margin-top: auto;
+    padding: 0.25rem 0.5rem;
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: fit-content;
+}
+
+/* Duration Display - SINGLE SOURCE OF TRUTH */
+.durationDisplay {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+    padding: 0.5rem;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 0.5rem;
+}
+
+.durationTime {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: 'Consolas', 'Monaco', monospace;
+    color: #fff;
+    letter-spacing: 0.05em;
+}
+
+.tierBadge {
+    padding: 0.25rem 0.5rem;
+    border: 1px solid;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* Tier Progress */
+.tierProgress {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    margin-bottom: 0.5rem;
+}
+
+.tierProgressBar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.tierProgressFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+.tierProgressLabel {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.5);
+    text-align: center;
+}
+
+/* Stability Status */
+.stabilityBadge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    text-align: center;
+    margin-top: auto;
+}
+
+.stabilityBadge.stable {
+    background: rgba(34, 197, 94, 0.15);
+    color: #86efac;
+}
+
+.stabilityBadge.unstable {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+}
+
+.stabilityBadge.transitioning {
+    background: rgba(59, 130, 246, 0.2);
+    color: #93c5fd;
+}
+
+/* Challenger Note */
+.challengerNote {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    text-align: center;
+    padding: 0.25rem;
+}
+
+/* ================================
+   CHALLENGER CARD
+   ================================ */
+
+.challengerCard {
+    border-left-color: rgba(255, 255, 255, 0.2);
+}
+
+.challengerCard.noChallenger {
+    background: rgba(10, 10, 20, 0.5);
+    border-style: dashed;
+    border-left-width: 1px;
+}
+
+.noChallengerContent {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+}
+
+.noChallengerIcon {
+    font-size: 2rem;
+    color: rgba(255, 255, 255, 0.15);
+}
+
+.noChallengerText {
+    font-size: 0.9rem;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+}
+
+.challengerHint {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+}
+
+.challengerConfidence {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin: 0.5rem 0;
+}
+
+.challengerBar {
+    flex: 1;
+    height: 6px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.challengerFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+.challengerValue {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    font-family: 'Consolas', monospace;
+    min-width: 42px;
+    text-align: right;
+}
+
+.challengerBadge {
+    margin-top: auto;
+    padding: 0.25rem 0.5rem;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    width: fit-content;
+    animation: contendPulse 1.5s infinite;
+}
+
+@keyframes contendPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.7;
+    }
+}
+
+/* ================================
+   TRANSITION BADGE
+   ================================ */
+
+.transitionBadge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.5rem 1.25rem;
+    border-radius: 9999px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.badgeEmoji {
+    font-size: 1rem;
+}
+
+.badgeStabilizing {
+    background: rgba(34, 197, 94, 0.2);
+    color: #86efac;
+    box-shadow: 0 0 20px rgba(34, 197, 94, 0.2);
+}
+
+.badgeTransition {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
+    animation: transitionPulse 1s infinite;
+}
+
+.badgeHolding {
+    background: rgba(100, 100, 120, 0.3);
+    color: rgba(255, 255, 255, 0.6);
+    animation: holdingPulse 2s infinite;
+}
+
+@keyframes transitionPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+@keyframes holdingPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
+}
+
+/* ================================
+   DOMINANT BANDS
+   ================================ */
+
+.dominantBands {
+    display: flex;
+    gap: 0.4rem;
+}
+
+.bandTag {
+    background: rgba(99, 102, 241, 0.2);
+    color: #a5b4fc;
+    padding: 0.2rem 0.5rem;
+    border-radius: 0.25rem;
+    font-size: 0.65rem;
+    font-weight: 500;
+}
+
+/* ================================
+   LEGEND
+   ================================ */
+
+.legend {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    pointer-events: auto;
+}
+
+.legend p {
+    color: rgba(255, 255, 255, 0.6);
+    font-size: 1rem;
+    margin-bottom: 1rem;
+}
+
+.legend ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.legend li {
+    color: rgba(255, 255, 255, 0.5);
+    font-size: 0.85rem;
+    margin: 0.3rem 0;
+}
+
+.legend li::before {
+    content: '✓ ';
+    color: #22c55e;
+}
+
+/* ================================
+   RESPONSIVE
+   ================================ */
+
+@media (max-width: 1000px) {
+    .orbArea {
+        gap: 1.5rem;
+    }
+
+    .leftCard,
+    .rightCard {
+        flex: 0 0 180px;
+    }
+
+    .orbPlaceholder {
+        width: 140px;
+        height: 140px;
+    }
+}
+
+@media (max-width: 800px) {
+    .orbArea {
+        flex-direction: column;
+        gap: 1rem;
+    }
+
+    .leftCard,
+    .rightCard {
+        flex: 0 0 auto;
+        width: 100%;
+        max-width: 280px;
+    }
+
+    .stateCard {
+        min-height: 120px;
+    }
+
+    .centerArea {
+        order: -1;
+    }
+
+    .orbPlaceholder {
+        width: 120px;
+        height: 120px;
+    }
+}
+
+@media (max-width: 600px) {
+    .powBar {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        padding: 0.5rem 1rem;
+    }
+
+    .powBand {
+        max-width: none;
+        flex: 1 1 45%;
+    }
+
+    .title {
+        font-size: 1.2rem;
+    }
+
+    .stateCard {
+        padding: 1rem;
+    }
+
+    .stateCardName {
+        font-size: 1rem;
+    }
+}

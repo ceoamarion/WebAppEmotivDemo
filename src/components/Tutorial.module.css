@@ -1,0 +1,364 @@
+/**
+ * Tutorial page styles
+ */
+
+.container {
+    padding: 24px;
+    max-width: 800px;
+    margin: 0 auto;
+    color: white;
+}
+
+.disclaimer {
+    padding: 12px 16px;
+    background: rgba(245, 158, 11, 0.1);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+    border-radius: 8px;
+    font-size: 12px;
+    color: #fcd34d;
+    margin-bottom: 24px;
+}
+
+.disconnected {
+    padding: 16px;
+    background: rgba(100, 116, 139, 0.15);
+    border: 1px solid rgba(100, 116, 139, 0.3);
+    border-radius: 8px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    margin-bottom: 24px;
+    text-align: center;
+}
+
+/* Sections */
+.section {
+    margin-bottom: 28px;
+}
+
+.sectionTitle {
+    margin: 0 0 16px 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Steps */
+.stepsContainer {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+}
+
+.stepCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    padding: 16px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    text-align: center;
+}
+
+.stepCard:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.15);
+}
+
+.stepCard.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.stepNumber {
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    font-size: 11px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.stepCard.active .stepNumber {
+    background: rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+.stepIcon {
+    font-size: 24px;
+}
+
+.stepLabel {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.stepDesc {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Step Content */
+.stepContent {
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.stepContent h3 {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.tipList {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    line-height: 1.8;
+}
+
+.feedback {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #86efac;
+}
+
+.feedbackIcon {
+    font-size: 18px;
+}
+
+/* Breathing */
+.breathingBox {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+    padding: 24px 0;
+}
+
+.breathCircle {
+    width: 120px;
+    height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(139, 92, 246, 0.3));
+    border: 2px solid rgba(99, 102, 241, 0.5);
+    border-radius: 50%;
+    transition: transform 0.3s ease;
+}
+
+.breathLabel {
+    font-size: 14px;
+    font-weight: 700;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.breathButton {
+    padding: 10px 20px;
+    background: rgba(59, 130, 246, 0.2);
+    border: 1px solid rgba(59, 130, 246, 0.4);
+    border-radius: 8px;
+    color: #93c5fd;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.breathButton:hover {
+    background: rgba(59, 130, 246, 0.3);
+}
+
+/* Band readout */
+.bandReadout {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.bandItem {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 12px;
+}
+
+.bandItem span:first-child {
+    width: 50px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bandBar {
+    flex: 1;
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.bandFill {
+    height: 100%;
+    border-radius: 4px;
+    transition: width 0.3s ease;
+}
+
+/* Current state box */
+.currentStateBox {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 16px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.stateLabel {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.stateName {
+    font-size: 14px;
+    font-weight: 700;
+}
+
+.stateDuration {
+    margin-left: auto;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Insights */
+.insightNote {
+    margin: 0 0 12px 0;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.insightsList {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.insightCard {
+    padding: 12px 14px;
+    background: rgba(139, 92, 246, 0.1);
+    border: 1px solid rgba(139, 92, 246, 0.2);
+    border-radius: 8px;
+}
+
+.insightPattern {
+    display: block;
+    font-size: 13px;
+    font-weight: 600;
+    color: #c4b5fd;
+    margin-bottom: 4px;
+}
+
+.insightRec {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+/* Trends */
+.trendsGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.trendCard {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+}
+
+.trendCard.low {
+    border-color: rgba(59, 130, 246, 0.3);
+    background: rgba(59, 130, 246, 0.1);
+}
+
+.trendCard.high {
+    border-color: rgba(245, 158, 11, 0.3);
+    background: rgba(245, 158, 11, 0.1);
+}
+
+.trendCard.positive {
+    border-color: rgba(34, 197, 94, 0.3);
+    background: rgba(34, 197, 94, 0.1);
+}
+
+.trendCard.negative {
+    border-color: rgba(239, 68, 68, 0.3);
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.trendLabel {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+.trendValue {
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+    text-transform: capitalize;
+}
+
+/* Responsive */
+@media (max-width: 700px) {
+    .stepsContainer {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+    .trendsGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 500px) {
+    .container {
+        padding: 16px;
+    }
+
+    .stepsContainer {
+        grid-template-columns: 1fr;
+    }
+}

@@ -1,0 +1,225 @@
+/**
+ * CinematicControls Styles
+ */
+
+.container {
+    position: relative;
+    z-index: 100;
+}
+
+/* Toggle Button */
+.toggleButton {
+    width: 36px;
+    height: 36px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0, 0, 0, 0.5);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+}
+
+.toggleButton:hover {
+    background: rgba(0, 0, 0, 0.7);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+.toggleButton.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+}
+
+.toggleIcon {
+    font-size: 16px;
+}
+
+.perfIndicator {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    font-size: 10px;
+    background: rgba(251, 191, 36, 0.9);
+    border-radius: 50%;
+    width: 14px;
+    height: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Panel */
+.panel {
+    position: absolute;
+    bottom: calc(100% + 8px);
+    left: 0;
+    min-width: 200px;
+    padding: 12px;
+    background: rgba(10, 10, 20, 0.95);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+}
+
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.title {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+.perfBadge {
+    font-size: 10px;
+    padding: 2px 6px;
+    background: rgba(251, 191, 36, 0.2);
+    color: rgb(251, 191, 36);
+    border-radius: 4px;
+}
+
+/* Controls */
+.control {
+    margin-bottom: 12px;
+}
+
+.control:last-of-type {
+    margin-bottom: 8px;
+}
+
+.label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.labelText {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.labelValue {
+    font-size: 11px;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Slider */
+.slider {
+    width: 100%;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 2px;
+    cursor: pointer;
+}
+
+.slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    border-radius: 50%;
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+    transition: transform 0.15s ease;
+}
+
+.slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+}
+
+.slider::-moz-range-thumb {
+    width: 14px;
+    height: 14px;
+    background: linear-gradient(135deg, #60a5fa, #3b82f6);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.sliderLabels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 4px;
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.35);
+}
+
+/* Toggle Option */
+.toggleOption {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 10px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.toggleOption:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.toggleOption.active {
+    background: rgba(59, 130, 246, 0.15);
+    border-color: rgba(59, 130, 246, 0.3);
+}
+
+.toggleEmoji {
+    font-size: 14px;
+}
+
+.toggleLabel {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Info */
+.info {
+    display: flex;
+    align-items: flex-start;
+    gap: 6px;
+    padding: 8px;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 6px;
+}
+
+.infoIcon {
+    font-size: 10px;
+    flex-shrink: 0;
+}
+
+.infoText {
+    font-size: 9px;
+    color: rgba(255, 255, 255, 0.4);
+    line-height: 1.4;
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .toggleButton,
+    .slider::-webkit-slider-thumb,
+    .toggleOption {
+        transition: none;
+    }
+}

@@ -1,0 +1,306 @@
+/**
+ * SessionSummaryModal Styles
+ */
+
+.overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.75);
+    backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    padding: 20px;
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.modal {
+    background: linear-gradient(135deg, rgba(15, 15, 25, 0.98), rgba(20, 20, 35, 0.98));
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 16px;
+    box-shadow:
+        0 20px 60px rgba(0, 0, 0, 0.5),
+        inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+    width: 100%;
+    max-width: 480px;
+    max-height: 90vh;
+    overflow-y: auto;
+    animation: slideUp 0.3s ease;
+}
+
+@keyframes slideUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.title {
+    margin: 0;
+    font-size: 20px;
+    font-weight: 700;
+    color: white;
+}
+
+.duration {
+    font-size: 18px;
+    font-weight: 600;
+    color: #22c55e;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Sections */
+.section {
+    padding: 16px 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.section:last-of-type {
+    border-bottom: none;
+}
+
+.sectionTitle {
+    margin: 0 0 12px 0;
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Stats Grid */
+.grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.stat {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.statLabel {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.statValue {
+    font-size: 16px;
+    font-weight: 700;
+    color: white;
+}
+
+.statSub {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Axes Grid */
+.axesGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+}
+
+.axisItem {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 10px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.axisLabel {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.45);
+    text-transform: uppercase;
+}
+
+.axisValue {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.emotionNote {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.emotionNote strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+/* Quality Grid */
+.qualityGrid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.qualityItem {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+    border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.qualityLabel {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.qualityValue {
+    font-size: 16px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+/* Notes */
+.notesInput {
+    width: 100%;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 8px;
+    color: white;
+    font-size: 13px;
+    font-family: inherit;
+    resize: vertical;
+    min-height: 60px;
+}
+
+.notesInput::placeholder {
+    color: rgba(255, 255, 255, 0.35);
+}
+
+.notesInput:focus {
+    outline: none;
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+/* Actions */
+.actions {
+    display: flex;
+    gap: 10px;
+    padding: 16px 24px 20px;
+}
+
+.discardButton,
+.recordsButton,
+.saveButton {
+    flex: 1;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    border: none;
+}
+
+.discardButton {
+    background: rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.6);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.discardButton:hover {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
+    border-color: rgba(239, 68, 68, 0.3);
+}
+
+.recordsButton {
+    background: rgba(59, 130, 246, 0.15);
+    color: #93c5fd;
+    border: 1px solid rgba(59, 130, 246, 0.3);
+}
+
+.recordsButton:hover {
+    background: rgba(59, 130, 246, 0.25);
+}
+
+.saveButton {
+    background: linear-gradient(135deg, #22c55e, #16a34a);
+    color: white;
+}
+
+.saveButton:hover {
+    background: linear-gradient(135deg, #16a34a, #15803d);
+}
+
+.saveButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 520px) {
+    .modal {
+        max-width: 100%;
+    }
+
+    .header {
+        padding: 16px 20px;
+    }
+
+    .section {
+        padding: 14px 20px;
+    }
+
+    .actions {
+        flex-direction: column;
+        padding: 14px 20px 18px;
+    }
+
+    .grid,
+    .axesGrid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* Reduced motion */
+@media (prefers-reduced-motion: reduce) {
+
+    .overlay,
+    .modal {
+        animation: none;
+    }
+}

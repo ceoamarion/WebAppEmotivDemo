@@ -1,0 +1,43 @@
+.dashboard {
+    min-height: 100vh;
+    padding: 2rem;
+    background: radial-gradient(circle at top right, #1f2937, #111827);
+    color: white;
+    font-family: 'Inter', sans-serif;
+}
+
+.header {
+    margin-bottom: 2rem;
+    text-align: center;
+}
+
+.title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    background: linear-gradient(to right, #60a5fa, #a855f7);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    margin-bottom: 0.5rem;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: #9ca3af;
+}
+
+.grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+    gap: 1.5rem;
+    max-width: 900px;
+    margin: 0 auto 1.5rem;
+}
+
+.card {
+    height: 100%;
+}
+
+.streamingSection {
+    max-width: 900px;
+    margin: 0 auto;
+}

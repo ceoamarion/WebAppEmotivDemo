@@ -1,0 +1,12 @@
+.appContainer {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #111827;
+}
+
+.main {
+  flex: 1;
+  padding-bottom: 70px;
+  /* Space for data bar */
+}

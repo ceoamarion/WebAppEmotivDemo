@@ -1,0 +1,555 @@
+/**
+ * Records Page Styles
+ */
+
+.container {
+    padding: 24px;
+    max-width: 900px;
+    margin: 0 auto;
+    color: white;
+}
+
+/* Header */
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+}
+
+.title {
+    margin: 0;
+    font-size: 24px;
+    font-weight: 700;
+}
+
+.headerActions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+.sessionCount {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.exportButton {
+    padding: 8px 14px;
+    background: rgba(59, 130, 246, 0.15);
+    border: 1px solid rgba(59, 130, 246, 0.3);
+    border-radius: 6px;
+    color: #93c5fd;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.exportButton:hover:not(:disabled) {
+    background: rgba(59, 130, 246, 0.25);
+}
+
+.exportButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+/* Tabs */
+.tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+
+.tab {
+    padding: 10px 18px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.tab:hover {
+    background: rgba(255, 255, 255, 0.08);
+}
+
+.tab.active {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(59, 130, 246, 0.4);
+    color: white;
+}
+
+/* Content */
+.content {
+    min-height: 300px;
+}
+
+/* Empty */
+.empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 60px 20px;
+    text-align: center;
+}
+
+.emptyIcon {
+    font-size: 48px;
+}
+
+.emptyText {
+    font-size: 16px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.emptyHint {
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+/* Sessions List */
+.sessionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.sessionCard {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.sessionCard:hover {
+    background: rgba(255, 255, 255, 0.07);
+    border-color: rgba(255, 255, 255, 0.12);
+}
+
+.sessionHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.sessionDate {
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.sessionDuration {
+    font-size: 14px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: #22c55e;
+}
+
+.sessionStats {
+    display: flex;
+    gap: 16px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.sessionStat strong {
+    color: rgba(255, 255, 255, 0.85);
+}
+
+/* Session Detail */
+.sessionDetail {
+    animation: fadeIn 0.2s ease;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+.backButton {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    cursor: pointer;
+    margin-bottom: 20px;
+    transition: all 0.15s ease;
+}
+
+.backButton:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.detailHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.detailDate {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.detailTime {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.detailDuration {
+    font-size: 24px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: #22c55e;
+}
+
+.detailSection {
+    margin-bottom: 24px;
+}
+
+.detailSection h3 {
+    margin: 0 0 12px 0;
+    font-size: 13px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.bestStateBox {
+    padding: 16px;
+    background: linear-gradient(135deg, rgba(139, 92, 246, 0.15), rgba(59, 130, 246, 0.15));
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 10px;
+}
+
+.bestStateName {
+    display: block;
+    font-size: 18px;
+    font-weight: 700;
+    color: #c4b5fd;
+    margin-bottom: 4px;
+}
+
+.bestStateDuration {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.stateBreakdown {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.stateBarRow {
+    display: grid;
+    grid-template-columns: 120px 1fr 60px;
+    align-items: center;
+    gap: 12px;
+}
+
+.stateBarLabel {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.7);
+    text-overflow: ellipsis;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+.stateBar {
+    height: 8px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.stateBarFill {
+    height: 100%;
+    background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+    border-radius: 4px;
+    min-width: 4px;
+}
+
+.stateBarTime {
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'SF Mono', 'Consolas', monospace;
+    text-align: right;
+}
+
+.emotionGrid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+}
+
+.emotionStat {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    padding: 12px;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 8px;
+}
+
+.emotionLabel {
+    font-size: 10px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+}
+
+.emotionValue {
+    font-size: 18px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.topEmotions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.emotionTag {
+    padding: 6px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 6px;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.emotionTag span {
+    color: rgba(255, 255, 255, 0.5);
+    margin-left: 6px;
+}
+
+.qualityRow {
+    display: flex;
+    gap: 24px;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.qualityRow strong {
+    color: rgba(255, 255, 255, 0.9);
+}
+
+.badSensorsList {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 8px;
+    margin-top: 12px;
+}
+
+.badSensorsLabel {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+.badSensorTag {
+    padding: 4px 8px;
+    background: rgba(239, 68, 68, 0.15);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 4px;
+    font-size: 11px;
+    color: #fca5a5;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.notes {
+    margin: 0;
+    font-size: 13px;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+.deleteButton {
+    margin-top: 24px;
+    padding: 10px 16px;
+    background: rgba(239, 68, 68, 0.1);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+    border-radius: 6px;
+    color: #fca5a5;
+    font-size: 12px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+
+.deleteButton:hover {
+    background: rgba(239, 68, 68, 0.2);
+}
+
+/* Trends */
+.trendsContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.trendSection {
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 12px;
+}
+
+.trendSection h3 {
+    margin: 0 0 16px 0;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.miniChart {
+    display: flex;
+    align-items: flex-end;
+    gap: 8px;
+    height: 80px;
+    padding: 8px 0;
+}
+
+.miniBar {
+    flex: 1;
+    background: linear-gradient(to top, #3b82f6, #8b5cf6);
+    border-radius: 3px;
+    min-width: 20px;
+    transition: height 0.3s ease;
+}
+
+.miniBar.green {
+    background: linear-gradient(to top, #22c55e, #16a34a);
+}
+
+.bestStatesGrid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+}
+
+.bestStateTag {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: rgba(139, 92, 246, 0.15);
+    border: 1px solid rgba(139, 92, 246, 0.3);
+    border-radius: 8px;
+    font-size: 13px;
+    color: #c4b5fd;
+}
+
+.bestStateCount {
+    color: rgba(255, 255, 255, 0.5);
+    font-weight: 600;
+}
+
+/* Summary */
+.summaryContainer {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.summaryGrid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+}
+
+.summaryCard {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding: 20px;
+    background: rgba(255, 255, 255, 0.04);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 12px;
+}
+
+.summaryLabel {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.summaryValue {
+    font-size: 24px;
+    font-weight: 700;
+    color: white;
+}
+
+.summarySub {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.signatureCard {
+    padding: 20px;
+    background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(59, 130, 246, 0.1));
+    border: 1px solid rgba(34, 197, 94, 0.2);
+    border-radius: 12px;
+    text-align: center;
+}
+
+.signatureLabel {
+    display: block;
+    font-size: 12px;
+    color: rgba(255, 255, 255, 0.6);
+    margin-bottom: 8px;
+}
+
+.signatureValue {
+    font-size: 18px;
+    font-weight: 700;
+    color: #86efac;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+    .container {
+        padding: 16px;
+    }
+
+    .header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 12px;
+    }
+
+    .tabs {
+        flex-wrap: wrap;
+    }
+
+    .summaryGrid,
+    .emotionGrid {
+        grid-template-columns: 1fr;
+    }
+
+    .stateBarRow {
+        grid-template-columns: 80px 1fr 50px;
+    }
+}

@@ -1,0 +1,272 @@
+/* Emotion Overlay - READ-ONLY display, does not affect layout */
+
+.overlay {
+    position: absolute;
+    bottom: 1rem;
+    left: 1rem;
+    z-index: 15;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.75rem 1rem;
+    background: rgba(10, 10, 20, 0.85);
+    backdrop-filter: blur(12px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 0.75rem;
+    min-width: 220px;
+    max-width: 280px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: opacity 0.3s ease, transform 0.3s ease;
+    pointer-events: none;
+}
+
+.overlay.visible {
+    opacity: 1;
+    transform: translateY(0);
+    pointer-events: auto;
+}
+
+/* Axes Panel */
+.axesPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.axisRow {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.axisLabel {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+    min-width: 48px;
+}
+
+.axisBar {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    position: relative;
+    overflow: hidden;
+}
+
+.axisFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.2s ease-out;
+}
+
+.axisCenter {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    width: 1px;
+    background: rgba(255, 255, 255, 0.25);
+}
+
+.axisValue {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 48px;
+    text-align: right;
+}
+
+/* Emotions Panel */
+.emotionsPanel {
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+    padding-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.emotionsLabel {
+    font-size: 0.55rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.45);
+}
+
+.emotionsList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.3rem;
+}
+
+.emotionChip {
+    display: flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.2rem 0.4rem;
+    background: rgba(255, 255, 255, 0.04);
+    border-radius: 0.25rem;
+    border-left: 2px solid;
+}
+
+.emotionDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+}
+
+.emotionName {
+    flex: 1;
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.8);
+}
+
+.emotionConf {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-family: 'Consolas', monospace;
+}
+
+/* Note Panel */
+.notePanel {
+    padding-top: 0.25rem;
+}
+
+.noteText {
+    font-size: 0.65rem;
+    color: rgba(255, 255, 255, 0.5);
+    font-style: italic;
+    line-height: 1.4;
+}
+
+/* Instability Badge */
+.instabilityBadge {
+    position: absolute;
+    top: -8px;
+    right: -8px;
+    padding: 0.2rem 0.5rem;
+    background: rgba(239, 68, 68, 0.9);
+    color: white;
+    font-size: 0.6rem;
+    font-weight: 600;
+    border-radius: 9999px;
+    animation: instabilityPulse 1s infinite;
+}
+
+@keyframes instabilityPulse {
+
+    0%,
+    100% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+}
+
+/* Frequency Reference */
+.freqRef {
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 15;
+    padding: 0.5rem 0.75rem;
+    background: rgba(10, 10, 20, 0.75);
+    backdrop-filter: blur(8px);
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 0.5rem;
+}
+
+.freqRefTitle {
+    display: block;
+    font-size: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: rgba(255, 255, 255, 0.4);
+    margin-bottom: 0.3rem;
+}
+
+.freqRefList {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+}
+
+.freqRefItem {
+    display: flex;
+    align-items: center;
+    gap: 0.3rem;
+}
+
+.freqRefDot {
+    width: 5px;
+    height: 5px;
+    border-radius: 50%;
+}
+
+.freqRefName {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.6);
+    min-width: 40px;
+}
+
+.freqRefRange {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+    font-family: 'Consolas', monospace;
+}
+
+/* Peak Frequency */
+.peakFreq {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    margin-top: 0.4rem;
+    padding-top: 0.4rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.peakLabel {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.peakValue {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: #a5b4fc;
+    font-family: 'Consolas', monospace;
+}
+
+.peakBand {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.4);
+}
+
+.peakUnavailable {
+    font-size: 0.55rem;
+    color: rgba(255, 255, 255, 0.3);
+    font-style: italic;
+}
+
+/* Responsive */
+@media (max-width: 800px) {
+    .overlay {
+        bottom: auto;
+        top: 60px;
+        left: 0.5rem;
+        min-width: 180px;
+        max-width: 200px;
+        padding: 0.5rem 0.75rem;
+    }
+
+    .freqRef {
+        display: none;
+        /* Hide on mobile to save space */
+    }
+}

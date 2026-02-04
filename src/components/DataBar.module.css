@@ -1,0 +1,127 @@
+.dataBar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background-color: rgba(17, 24, 39, 0.95);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid #374151;
+    padding: 0.75rem 2rem;
+    display: flex;
+    align-items: center;
+    gap: 2rem;
+    z-index: 100;
+    min-height: 60px;
+}
+
+.connectionStatus {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding-right: 1.5rem;
+    border-right: 1px solid #374151;
+    color: #9ca3af;
+    font-size: 0.8rem;
+    min-width: 130px;
+}
+
+.dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background-color: #ef4444;
+    flex-shrink: 0;
+}
+
+.dot.active {
+    background-color: #22c55e;
+    animation: pulse 2s infinite;
+}
+
+.dataStream {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    gap: 1.5rem;
+    overflow-x: auto;
+}
+
+.placeholder {
+    color: #6b7280;
+    font-size: 0.85rem;
+    font-style: italic;
+}
+
+.streamType {
+    background: linear-gradient(to right, #4f46e5, #7c3aed);
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: white;
+    letter-spacing: 0.05em;
+    flex-shrink: 0;
+}
+
+.dataValues {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+}
+
+.metric {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.125rem;
+    min-width: 70px;
+}
+
+.metricBar {
+    width: 100%;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.metricFill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.2s ease-out;
+}
+
+.metricLabel {
+    font-size: 0.6rem;
+    color: #9ca3af;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.metricValue {
+    font-size: 0.85rem;
+    font-weight: 600;
+    font-family: 'Consolas', monospace;
+}
+
+.rawData {
+    font-family: 'Consolas', monospace;
+    font-size: 0.75rem;
+    color: #4ade80;
+    opacity: 0.8;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.7);
+    }
+
+    50% {
+        opacity: 0.8;
+        box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+    }
+}
