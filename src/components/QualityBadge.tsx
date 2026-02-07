@@ -166,7 +166,15 @@ function QualityPopoverContent({ quality }: { quality: EEGQualityPayload }) {
                 <>
                     {/* A) EEG Quality Percent - PRIMARY METRIC */}
                     <div className={styles.metricSection}>
-                        <div className={styles.metricHeader}>EEG Quality</div>
+                        <div className={styles.metricHeader}>
+                            EEG Quality
+                            <span
+                                className={styles.metricTooltip}
+                                title="Derived from electrode contact quality; may differ from cognitive metrics shown in Emotiv Launcher."
+                            >
+                                ⓘ
+                            </span>
+                        </div>
                         {quality.eegQualityPercent !== null ? (
                             <div className={styles.primaryMetric}>
                                 <span className={styles.primaryValue}>

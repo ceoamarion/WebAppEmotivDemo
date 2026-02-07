@@ -34,6 +34,38 @@
     border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
 
+/* Connection Status Indicator */
+.connectionIndicator {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.7rem;
+    font-weight: 600;
+    padding: 0.3rem 0.75rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 9999px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.connectionDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    animation: connectionPulse 2s infinite;
+}
+
+@keyframes connectionPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
 .powBar.powBarStale {
     opacity: 0.6;
 }

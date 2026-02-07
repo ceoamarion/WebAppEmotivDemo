@@ -163,6 +163,20 @@
     text-transform: uppercase;
     letter-spacing: 0.4px;
     margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.metricTooltip {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    cursor: help;
+    transition: color 0.15s ease;
+}
+
+.metricTooltip:hover {
+    color: rgba(255, 255, 255, 0.7);
 }
 
 /* Primary Metric (EEG Quality %) */

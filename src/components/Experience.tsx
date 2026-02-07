@@ -1,19 +1,43 @@
 "use client";
 
+/**
+ * Experience Component - Refactored for Stability
+ * 
+ * Uses Zustand session store as SINGLE SOURCE OF TRUTH.
+ * All UI components are ALWAYS MOUNTED to prevent flicker.
+ * Correct field mapping for EEG Quality, Battery, Signal.
+ * 
+ * Key Changes:
+ * - Removed duplicate local state
+ * - Integrated useSessionStore for centralized data
+ * - StablePOWBar and StableEmotionPanel are always mounted
+ * - Connection state uses hysteresis to prevent flapping
+ * - EMA smoothing on band power and emotions
+ */
+
 import { useEffect, useRef, useCallback, useState } from 'react';
 import { useCortex } from '@/context/CortexContext';
-import { useEEGStream, POWData } from '@/hooks/useEEGStream';
+import { useEEGStream } from '@/hooks/useEEGStream';
 import { useEEGQuality } from '@/hooks/useEEGQuality';
-import { useConnectionState } from '@/hooks/useConnectionState';
-import { useStableDataStore } from '@/hooks/useStableDataStore';
 import { useInference } from '@/hooks/useInference';
 import { useEmotionInference } from '@/hooks/useEmotionInference';
+import type { StreamType } from '@/services/cortex';
 import {
     useStateMachine,
     StateMachineOutput,
     DisplayState,
     ChallengerDisplay,
 } from '@/hooks/useStateMachine';
+
+// Zustand session store - SINGLE SOURCE OF TRUTH
+import { useSessionStore } from '@/stores/sessionStore';
+
+// Stable components that are ALWAYS MOUNTED
+import { StablePOWBar } from './StablePOWBar';
+import { StableEmotionPanel } from './StableEmotionPanel';
+import { EEGStatusBadge } from './EEGStatusBadge';
+
+// Other components
 import { DebugOverlay } from './DebugOverlay';
 import { ConnectionDebugOverlay } from './ConnectionDebugOverlay';
 import { StatePopover } from './StatePopover';
@@ -40,14 +64,16 @@ import styles from './Experience.module.css';
 export default function Experience() {
     const { streamData, sessionActive, startStreaming, stopStreaming } = useCortex();
 
+    // UI state (NOT data state - that's in Zustand store)
     const [isRunning, setIsRunning] = useState(false);
     const [isDemo, setIsDemo] = useState(false);
-    const [isSleepMode, setIsSleepMode] = useState(false); // Critical: affects "Lucid Dreaming" labeling
-    const [showEmotions, setShowEmotions] = useState(true); // Emotion overlay toggle
-    const [showDebug, setShowDebug] = useState(false); // Debug overlay (press D)
-    const [showConnectionDebug, setShowConnectionDebug] = useState(false); // Connection debug (press C)
-    const [showSummary, setShowSummary] = useState(false); // Session summary modal
+    const [isSleepMode, setIsSleepMode] = useState(false);
+    const [showEmotions, setShowEmotions] = useState(true);
+    const [showDebug, setShowDebug] = useState(false);
+    const [showConnectionDebug, setShowConnectionDebug] = useState(false);
+    const [showSummary, setShowSummary] = useState(false);
     const [sessionRecord, setSessionRecord] = useState<SessionRecord | null>(null);
+    const [emotionPanelCollapsed, setEmotionPanelCollapsed] = useState(false);
 
     // Session collector for recording data
     const sessionCollectorRef = useRef<SessionCollector | null>(null);
@@ -63,34 +89,77 @@ export default function Experience() {
 
     const activeStreamData = isDemo ? simulatedStreamData : streamData;
 
-    // LAYER A: Raw Stream
-    const { latestPOW, latestMET, lastSampleTs, isStale } = useEEGStream(activeStreamData);
+    // ZUSTAND STORE - Get data and actions (use stable function references)
+    const setStoreSessionActive = useSessionStore(s => s.setSessionActive);
+    const receiveStreamPacket = useSessionStore(s => s.receiveStreamPacket);
+    const updateEmotions = useSessionStore(s => s.updateEmotions);
+    const resetSession = useSessionStore(s => s.resetSession);
+    const storeTick = useSessionStore(s => s.tick);
 
-    // LAYER A.1: CONNECTION STATE MACHINE (single source of truth for connection status)
-    // Implements hysteresis: DISCONNECTED → CONNECTING → CONNECTED → DEGRADED → STALE → DISCONNECTED
-    const connectionState = useConnectionState(isRunning, activeStreamData);
+    // Get state for ConnectionDebugOverlay (read-only)
+    const sessionStoreState = useSessionStore();
 
-    // LAYER A.2: STABLE DATA STORE (caches last-known values, applies EMA smoothing)
-    // Never loses data on temporary connection drops
-    const { quality: eegQuality, resetSessionStats: resetEEGQualityStats } = useEEGQuality(
+    // LAYER A: Raw Stream (still needed for state machine)
+    const { latestPOW, latestMET } = useEEGStream(activeStreamData);
+
+    // LAYER A.1: EEG Quality (for QualityBadge popover details)
+    const { quality: eegQuality } = useEEGQuality(
         activeStreamData,
         sessionActive || isDemo
     );
-    const stableDataStore = useStableDataStore(latestPOW, latestMET, eegQuality);
 
-    // LAYER B: Inference (6.7Hz) - pass isSleepMode for proper state labeling
+    // LAYER B: Inference (6.7Hz)
     const { candidates } = useInference(latestPOW, latestMET, isSleepMode);
 
-    // LAYER C: Emotion Inference (5Hz) - feeds into state machine
+    // LAYER C: Emotion Inference (5Hz)
     const emotionResult = useEmotionInference(latestPOW, latestMET);
 
-    // LAYER D: STATE MACHINE (SINGLE SOURCE OF TRUTH)
-    // Uses useReducer for deterministic state transitions
-    // Implements hysteresis to prevent fast switching
-    // Timer resets ONLY when currentStateId actually changes
+    // LAYER D: STATE MACHINE
     const { output: stateMachine, debug } = useStateMachine(candidates, emotionResult);
 
-    // Debug keyboard shortcuts (D for state machine debug, C for connection debug)
+    // ================================
+    // SYNC TO ZUSTAND STORE
+    // ================================
+
+    // Sync stream data to store
+    useEffect(() => {
+        if (activeStreamData?.data && activeStreamData.stream) {
+            receiveStreamPacket(activeStreamData.stream, activeStreamData.data);
+        }
+    }, [activeStreamData, receiveStreamPacket]);
+
+    // Sync session active state
+    useEffect(() => {
+        setStoreSessionActive(isRunning);
+    }, [isRunning, setStoreSessionActive]);
+
+    // Sync emotions to store
+    useEffect(() => {
+        if (emotionResult.axes && emotionResult.topEmotions) {
+            updateEmotions(
+                emotionResult.axes,
+                emotionResult.topEmotions.map(e => ({ name: e.label, score: e.confidence }))
+            );
+        }
+    }, [emotionResult, updateEmotions]);
+
+    // NOTE: Mind state is NOT synced to Zustand store to avoid infinite loops.
+    // The state machine (useStateMachine) is the source of truth for mind state.
+    // Use stateMachine.currentState and stateMachine.challenger directly in UI.
+
+    // Store tick loop (runs every 500ms for stale detection)
+    useEffect(() => {
+        if (!isRunning) return;
+        const interval = setInterval(() => {
+            storeTick();
+        }, 500);
+        return () => clearInterval(interval);
+    }, [isRunning, storeTick]);
+
+    // ================================
+    // KEYBOARD SHORTCUTS
+    // ================================
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === 'd' || e.key === 'D') {
@@ -104,7 +173,10 @@ export default function Experience() {
         return () => window.removeEventListener('keydown', handleKeyDown);
     }, []);
 
-    // Demo mode simulation
+    // ================================
+    // DEMO MODE SIMULATION
+    // ================================
+
     useEffect(() => {
         if (!isDemo) {
             if (demoIntervalRef.current) {
@@ -120,7 +192,6 @@ export default function Experience() {
             demoTimeRef.current += 0.1;
             const t = demoTimeRef.current;
 
-            // Slower oscillation for more stable states
             const phase = (Math.sin(t * 0.02) + 1) / 2;
             const subPhase = (Math.sin(t * 0.08) + 1) / 2;
             const noise = () => (Math.random() - 0.5) * 0.06;
@@ -147,7 +218,10 @@ export default function Experience() {
         };
     }, [isDemo]);
 
-    // Canvas animation
+    // ================================
+    // CANVAS ANIMATION
+    // ================================
+
     useEffect(() => {
         const canvas = canvasRef.current;
         if (!canvas) return;
@@ -207,11 +281,61 @@ export default function Experience() {
         };
     }, [stateMachine]);
 
+    // ================================
+    // SESSION RECORDING
+    // ================================
+
+    useEffect(() => {
+        if (!isRunning || !sessionCollectorRef.current) return;
+
+        addStateSample(
+            sessionCollectorRef.current,
+            stateMachine.currentState.id,
+            stateMachine.currentState.confidence,
+            stateMachine.currentState.tier as 'candidate' | 'confirmed' | 'locked'
+        );
+
+        addEmotionSample(
+            sessionCollectorRef.current,
+            emotionResult.axes.valence,
+            emotionResult.axes.arousal,
+            emotionResult.axes.control,
+            emotionResult.topEmotions
+        );
+
+        addBandPowerSample(
+            sessionCollectorRef.current,
+            latestPOW.theta,
+            latestPOW.alpha,
+            latestPOW.betaL,
+            latestPOW.betaH,
+            latestPOW.gamma
+        );
+
+        if (eegQuality.available) {
+            const badSensorNames = eegQuality.perSensor
+                ? Object.values(eegQuality.perSensor)
+                    .filter(s => s.rawValue <= 1)
+                    .map(s => s.name)
+                : [];
+            addEEGQualitySample(
+                sessionCollectorRef.current,
+                eegQuality.eegQualityPercent,
+                eegQuality.badSensorsCount,
+                badSensorNames
+            );
+        }
+    }, [isRunning, stateMachine, emotionResult, latestPOW, eegQuality]);
+
+    // ================================
+    // HANDLERS
+    // ================================
+
     const handleStart = useCallback(async () => {
         if (sessionActive) {
             try {
-                // Subscribe to pow, met, and dev (for quality) streams
-                await startStreaming(['pow', 'met', 'dev'] as any);
+                const streams: StreamType[] = ['pow', 'met', 'dev'];
+                await startStreaming(streams);
                 setIsRunning(true);
                 setIsDemo(false);
             } catch {
@@ -223,68 +347,19 @@ export default function Experience() {
             setIsRunning(true);
             demoTimeRef.current = 0;
         }
-        // Initialize session collector
         sessionCollectorRef.current = createSessionCollector();
     }, [sessionActive, startStreaming]);
-
-    // Record data samples when running
-    useEffect(() => {
-        if (!isRunning || !sessionCollectorRef.current) return;
-
-        // Record state sample
-        addStateSample(
-            sessionCollectorRef.current,
-            stateMachine.currentState.id,
-            stateMachine.currentState.confidence,
-            stateMachine.currentState.tier as 'candidate' | 'confirmed' | 'locked'
-        );
-
-        // Record emotion sample
-        addEmotionSample(
-            sessionCollectorRef.current,
-            emotionResult.axes.valence,
-            emotionResult.axes.arousal,
-            emotionResult.axes.control,
-            emotionResult.topEmotions
-        );
-
-        // Record band power sample
-        addBandPowerSample(
-            sessionCollectorRef.current,
-            latestPOW.theta,
-            latestPOW.alpha,
-            latestPOW.betaL,
-            latestPOW.betaH,
-            latestPOW.gamma
-        );
-
-        // Record EEG quality sample (if available)
-        if (eegQuality.available) {
-            // Get bad sensor names from per-sensor data (now a Record, not array)
-            const badSensorNames = eegQuality.perSensor
-                ? Object.values(eegQuality.perSensor)
-                    .filter(s => s.rawValue <= 1)
-                    .map(s => s.name)
-                : [];
-            addEEGQualitySample(
-                sessionCollectorRef.current,
-                eegQuality.eegQualityPercent,  // From Emotiv stream
-                eegQuality.badSensorsCount,    // From per-sensor data
-                badSensorNames
-            );
-        }
-    }, [isRunning, stateMachine, emotionResult, latestPOW, eegQuality]);
 
     const handleStop = useCallback(async () => {
         if (!isDemo && isRunning) {
             try {
-                await stopStreaming(['pow', 'met']);
+                const streams: StreamType[] = ['pow', 'met'];
+                await stopStreaming(streams);
             } catch {
                 // Ignore stop errors
             }
         }
 
-        // Finalize and show session summary
         if (sessionCollectorRef.current) {
             const record = finalizeSession(sessionCollectorRef.current);
             setSessionRecord(record);
@@ -294,19 +369,21 @@ export default function Experience() {
         setIsRunning(false);
         setIsDemo(false);
         setSimulatedStreamData(null);
-    }, [isDemo, isRunning, stopStreaming]);
+
+        // Reset store
+        resetSession();
+    }, [isDemo, isRunning, stopStreaming, resetSession]);
+
+    // ================================
+    // RENDER
+    // ================================
 
     return (
         <div className={styles.container}>
             <canvas ref={canvasRef} className={styles.canvas} />
 
-            {/* POW Bar - ALWAYS visible (uses smoothed data from stable store) */}
-            <POWBar
-                pow={stableDataStore.bandPower}
-                isStale={stableDataStore.bandPower.isStale}
-                connectionLabel={connectionState.label}
-                connectionState={connectionState.state}
-            />
+            {/* STABLE POW BAR - ALWAYS MOUNTED (from Zustand store) */}
+            <StablePOWBar />
 
             <div className={styles.overlay}>
                 {/* Top controls */}
@@ -318,11 +395,16 @@ export default function Experience() {
                         </button>
                     ) : (
                         <div className={styles.controlsGroup}>
+                            {/* EEG Status Badge - shows correct EEG/Battery/Signal from store */}
+                            <EEGStatusBadge />
+
+                            {/* Quality Badge with detailed popover */}
                             <QualityBadge quality={eegQuality} />
+
                             <button
                                 onClick={() => setIsSleepMode(!isSleepMode)}
                                 className={`${styles.sleepToggle} ${isSleepMode ? styles.sleepActive : ''}`}
-                                title={isSleepMode ? 'Sleep mode enabled - Lucid Dreaming can be detected' : 'Awake mode - Lucid patterns labeled as Dreamlike Awareness'}
+                                title={isSleepMode ? 'Sleep mode enabled' : 'Awake mode'}
                             >
                                 {isSleepMode ? '🌙 Sleep' : '☀️ Awake'}
                             </button>
@@ -358,7 +440,13 @@ export default function Experience() {
                 )}
             </div>
 
-            {/* Emotion Overlay - READ-ONLY with Info Panel */}
+            {/* STABLE EMOTION PANEL - ALWAYS MOUNTED (from Zustand store) */}
+            <StableEmotionPanel
+                collapsed={emotionPanelCollapsed || !showEmotions || !isRunning}
+                onToggle={() => setEmotionPanelCollapsed(prev => !prev)}
+            />
+
+            {/* Emotion Overlay - existing component for visual feedback */}
             <EmotionOverlay
                 emotion={emotionResult}
                 isVisible={isRunning && showEmotions}
@@ -373,8 +461,46 @@ export default function Experience() {
 
             {/* Connection Debug Overlay - Press C to toggle */}
             <ConnectionDebugOverlay
-                connection={connectionState}
-                dataStore={stableDataStore}
+                connection={{
+                    state: sessionStoreState.connectionState,
+                    label: sessionStoreState.connectionLabel,
+                    lastPacketAgeMs: sessionStoreState.lastPacketAt ? Date.now() - sessionStoreState.lastPacketAt : -1,
+                    lastPacketAt: sessionStoreState.lastPacketAt,
+                    isReceivingData: sessionStoreState.connectionState === 'connected',
+                    packetRate: sessionStoreState.packetRate,
+                    reconnectAttempts: 0,
+                }}
+                dataStore={{
+                    bandPower: {
+                        ...sessionStoreState.bandPower,
+                        isStale: sessionStoreState.bandPowerStale,
+                        lastUpdatedAt: sessionStoreState.bandPowerLastUpdate,
+                        dominantBand: sessionStoreState.dominantBand,
+                        dominantBandStable: sessionStoreState.dominantBand,
+                    },
+                    rawBandPower: sessionStoreState.rawBandPower,
+                    metrics: {
+                        stress: 0,
+                        relaxation: 0,
+                        engagement: 0,
+                        focus: 0,
+                        excitement: 0,
+                        interest: 0,
+                        isStale: sessionStoreState.emotionsStale,
+                        lastUpdatedAt: sessionStoreState.emotionsLastUpdate,
+                    },
+                    quality: {
+                        eegQualityPercent: sessionStoreState.device.eegQuality,
+                        badSensorsCount: sessionStoreState.badSensorCount,
+                        goodSensorsCount: sessionStoreState.goodSensorCount,
+                        totalSensors: 14,
+                        isStale: false,
+                        lastUpdatedAt: Date.now(),
+                        source: sessionStoreState.device.eegQuality !== null ? 'stream' : 'unavailable',
+                    },
+                    isDataStale: sessionStoreState.bandPowerStale || sessionStoreState.emotionsStale,
+                    lastAnyUpdateAt: Math.max(sessionStoreState.bandPowerLastUpdate, sessionStoreState.emotionsLastUpdate),
+                }}
                 eegQualityRaw={eegQuality}
                 isVisible={showConnectionDebug}
                 onToggle={() => setShowConnectionDebug(prev => !prev)}
@@ -396,83 +522,9 @@ export default function Experience() {
                     }}
                     onViewRecords={() => {
                         setShowSummary(false);
-                        // Navigate to records - would need tab state lifted
                     }}
                 />
             )}
-        </div>
-    );
-}
-
-// ================================
-// POW BAR - ALWAYS MOUNTED (never unmounts for stability)
-// ================================
-
-// Types imported at top of file from useConnectionState and useStableDataStore
-
-interface POWBarProps {
-    pow: SmoothedPOWData;
-    isStale: boolean;
-    connectionLabel?: string;
-    connectionState?: ConnectionState;
-}
-
-const CONNECTION_STATE_COLORS: Record<ConnectionState, string> = {
-    connected: '#22c55e',
-    degraded: '#f59e0b',
-    stale: '#ef4444',
-    disconnected: '#64748b',
-    connecting: '#3b82f6',
-};
-
-function POWBar({ pow, isStale, connectionLabel, connectionState = 'disconnected' }: POWBarProps) {
-    const bands = [
-        { name: 'Theta', value: pow.theta, color: '#8b5cf6' },
-        { name: 'Alpha', value: pow.alpha, color: '#22c55e' },
-        { name: 'Beta-L', value: pow.betaL, color: '#3b82f6' },
-        { name: 'Beta-H', value: pow.betaH, color: '#f59e0b' },
-        { name: 'Gamma', value: pow.gamma, color: '#ef4444' },
-    ];
-
-    const stateColor = CONNECTION_STATE_COLORS[connectionState];
-
-    return (
-        <div className={`${styles.powBar} ${isStale ? styles.powBarStale : ''}`}>
-            {/* Connection Status Indicator */}
-            {connectionLabel && (
-                <span
-                    className={styles.connectionIndicator}
-                    style={{ color: stateColor }}
-                    title={`Connection: ${connectionState}`}
-                >
-                    <span
-                        className={styles.connectionDot}
-                        style={{ backgroundColor: stateColor }}
-                    />
-                    {connectionLabel}
-                </span>
-            )}
-
-            <span className={styles.powLabel} title="Band Power (relative, not Hz)">BAND PWR</span>
-            {bands.map(band => (
-                <div key={band.name} className={styles.powBand}>
-                    <div className={styles.powMeter}>
-                        <div
-                            className={styles.powFill}
-                            style={{
-                                width: `${Math.min(100, band.value * 100)}%`,
-                                backgroundColor: band.color,
-                                opacity: isStale ? 0.5 : 1,
-                            }}
-                        />
-                    </div>
-                    <span className={styles.powName}>{band.name}</span>
-                    <span className={styles.powValue} style={{ color: isStale ? '#666' : band.color }}>
-                        {isStale ? '—' : (band.value * 100).toFixed(0)}
-                    </span>
-                </div>
-            ))}
-            {isStale && <span className={styles.staleIndicator}>⏳</span>}
         </div>
     );
 }
@@ -486,11 +538,11 @@ interface StateMachineOrbAreaProps {
 }
 
 function StateMachineOrbArea({ model }: StateMachineOrbAreaProps) {
-    const { currentState, challenger, transitionLabel } = model;
+    const { currentState, challenger } = model;
 
     return (
         <div className={styles.orbArea}>
-            {/* LEFT: Current State - SINGLE SOURCE OF TRUTH */}
+            {/* LEFT: Current State */}
             <div className={styles.leftCard}>
                 <SMCurrentStateCard state={currentState} />
             </div>
@@ -506,7 +558,7 @@ function StateMachineOrbArea({ model }: StateMachineOrbAreaProps) {
                 </div>
             </div>
 
-            {/* RIGHT: Challenger - NO duration (not promoted) */}
+            {/* RIGHT: Challenger */}
             <div className={styles.rightCard}>
                 <SMChallengerCard challenger={challenger} />
             </div>
@@ -516,158 +568,74 @@ function StateMachineOrbArea({ model }: StateMachineOrbAreaProps) {
 
 // ================================
 // STATE MACHINE CURRENT STATE CARD
-// SINGLE SOURCE: Duration, Tier, Stability all here
 // ================================
 
-// Tier display info
-const TIER_ICONS: Record<string, string> = {
-    detected: '○',
-    candidate: '◐',
-    confirmed: '●',
-    locked: '🔒',
-};
-
-const TIER_COLORS: Record<string, string> = {
-    detected: '#f59e0b',
-    candidate: '#3b82f6',
-    confirmed: '#22c55e',
-    locked: '#a855f7',
-};
-
-function SMCurrentStateCard({ state }: { state: DisplayState }) {
-    const stateInfo = getStateInfo(state.id);
-
-    return (
-        <StatePopover
-            stateInfo={stateInfo}
-            confidence={state.confidence}
-            lockedSince={state.lockedDurationMs > 0 ? Date.now() - state.lockedDurationMs : undefined}
-            status={state.tier === 'locked' ? 'locked' : 'candidate'}
-        >
-            <div
-                className={`${styles.stateCard} ${styles.currentCard}`}
-                style={{ borderColor: state.color }}
-            >
-                <span className={styles.stateCardTitle}>Current State</span>
-                <span
-                    className={styles.stateCardName}
-                    style={{ color: state.color }}
-                >
-                    {state.name}
-                </span>
-
-                {/* DURATION - SINGLE SOURCE OF TRUTH */}
-                <div className={styles.durationDisplay}>
-                    <span className={styles.durationTime}>{state.durationFormatted}</span>
-                    <span
-                        className={styles.tierBadge}
-                        style={{
-                            color: TIER_COLORS[state.tier],
-                            borderColor: TIER_COLORS[state.tier]
-                        }}
-                    >
-                        {TIER_ICONS[state.tier]} {state.tierLabel}
-                    </span>
-                </div>
-
-                {/* Confidence */}
-                <div className={styles.confidenceRing}>
-                    <svg viewBox="0 0 36 36" className={styles.ringChart}>
-                        <path
-                            className={styles.ringBg}
-                            d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                        <path
-                            className={styles.ringFill}
-                            style={{
-                                stroke: state.color,
-                                strokeDasharray: `${state.confidence}, 100`
-                            }}
-                            d="M18 2.0845
-                a 15.9155 15.9155 0 0 1 0 31.831
-                a 15.9155 15.9155 0 0 1 0 -31.831"
-                        />
-                    </svg>
-                    <span className={styles.ringValue}>{state.confidence}%</span>
-                </div>
-
-                {/* Stability Status */}
-                <div className={`${styles.stabilityBadge} ${styles[state.stabilityStatus]}`}>
-                    {state.stabilityStatus === 'stable' && '✓ Stable'}
-                    {state.stabilityStatus === 'unstable' && '⚠ Unstable'}
-                    {state.stabilityStatus === 'transitioning' && '↻ Transitioning'}
-                </div>
-            </div>
-        </StatePopover>
-    );
+interface SMCurrentStateCardProps {
+    state: DisplayState;
 }
 
-// ================================
-// STATE MACHINE CHALLENGER CARD (NO duration - not promoted)
-// ================================
-
-function SMChallengerCard({ challenger }: { challenger: ChallengerDisplay | null }) {
-    if (!challenger) {
-        return (
-            <div className={`${styles.stateCard} ${styles.challengerCard} ${styles.noChallenger}`}>
-                <span className={styles.stateCardTitle}>Challenger</span>
-                <div className={styles.noChallengerContent}>
-                    <span className={styles.noChallengerIcon}>⬡</span>
-                    <span className={styles.noChallengerText}>No challenger</span>
-                </div>
-                <span className={styles.challengerHint}>State is stable</span>
-            </div>
-        );
-    }
-
-    const stateInfo = getStateInfo(challenger.id);
+function SMCurrentStateCard({ state }: SMCurrentStateCardProps) {
+    const info = getStateInfo(state.id);
+    const tierProgress = getTierProgress(state.tier, state.durationMs);
+    const { color, progressColor } = getTierStyles(state.tier);
 
     return (
-        <StatePopover
-            stateInfo={stateInfo}
-            confidence={challenger.confidence}
-            status="challenger"
-        >
-            <div
-                className={`${styles.stateCard} ${styles.challengerCard}`}
-                style={{ borderColor: challenger.color }}
-            >
-                <span className={styles.stateCardTitle}>Challenger</span>
-                <span
-                    className={styles.stateCardName}
-                    style={{ color: challenger.color }}
-                >
-                    {challenger.name}
-                </span>
-
-                {/* Show lead duration if candidate */}
-                {challenger.isCandidate && (
-                    <span className={styles.challengerNote}>
-                        Leading for {Math.round(challenger.leadDurationMs / 1000)}s
+        <div className={styles.stateCard} style={{ borderColor: state.color }}>
+            <div className={styles.stateCardHeader}>
+                <StatePopover stateInfo={info} confidence={state.confidence}>
+                    <span className={styles.stateCardEmoji}>🧠</span>
+                </StatePopover>
+                <div className={styles.stateCardInfo}>
+                    <span className={styles.stateCardName}>{info.name}</span>
+                    <span className={styles.stateCardDesc} style={{ color: state.color }}>
+                        {state.confidence.toFixed(0)}% confidence
                     </span>
-                )}
-
-                {/* Confidence bar */}
-                <div className={styles.challengerConfidence}>
-                    <div className={styles.challengerBar}>
-                        <div
-                            className={styles.challengerFill}
-                            style={{
-                                width: `${challenger.confidence}%`,
-                                backgroundColor: challenger.color
-                            }}
-                        />
-                    </div>
-                    <span className={styles.challengerValue}>{challenger.confidence}%</span>
                 </div>
+            </div>
 
-                <span className={styles.challengerBadge}>
-                    {challenger.isCandidate ? '🎯 CANDIDATE' : '⚡ CONTENDING'}
+            {/* Circular progress ring */}
+            <div className={styles.confidenceRing}>
+                <svg viewBox="0 0 36 36" className={styles.ringCircle}>
+                    <circle className={styles.ringBg} cx="18" cy="18" r="15.9" />
+                    <circle
+                        className={styles.ringFill}
+                        cx="18" cy="18" r="15.9"
+                        style={{
+                            stroke: state.color,
+                            strokeDasharray: `${state.confidence}, 100`
+                        }}
+                    />
+                </svg>
+                <span className={styles.ringValue}>{state.confidence.toFixed(0)}</span>
+            </div>
+
+            {/* Tier badge */}
+            <div className={styles.lockedBadge} style={{ background: color, color: progressColor }}>
+                {state.tier === 'locked' ? '🔒 LOCKED' :
+                    state.tier === 'confirmed' ? '✓ CONFIRMED' : '○ CANDIDATE'}
+            </div>
+
+            {/* Duration (only source of time) */}
+            <div className={styles.durationBox}>
+                <span className={styles.durationValue}>
+                    {formatDuration(state.durationMs)}
+                </span>
+                <span className={styles.durationLabel}>in state</span>
+            </div>
+
+            {/* Tier progress bar */}
+            <div className={styles.tierProgress}>
+                <div className={styles.tierProgressBar}>
+                    <div
+                        className={styles.tierProgressFill}
+                        style={{ width: `${tierProgress * 100}%`, background: progressColor }}
+                    />
+                </div>
+                <span className={styles.tierProgressLabel}>
+                    {getNextTierLabel(state.tier, state.durationMs)}
                 </span>
             </div>
-        </StatePopover>
+        </div>
     );
 }
 
@@ -676,183 +644,233 @@ function SMChallengerCard({ challenger }: { challenger: ChallengerDisplay | null
 // ================================
 
 function SMTransitionBadge({ state }: { state: DisplayState }) {
-    // Derive badge from state tier and stability
-    let label = 'DETECTING';
-    let emoji = '○';
-    let className = styles.badgeHolding;
-
-    if (state.tier === 'locked' && state.isStable) {
-        label = 'LOCKED';
-        emoji = '🔒';
-        className = styles.badgeStabilizing;
-    } else if (state.tier === 'confirmed') {
-        label = 'CONFIRMED';
-        emoji = '●';
-        className = styles.badgeTransition;
-    } else if (state.tier === 'candidate') {
-        label = 'CANDIDATE';
-        emoji = '◐';
-        className = styles.badgeTransition;
-    } else if (!state.isStable) {
-        label = 'UNSTABLE';
-        emoji = '⚠';
-        className = styles.badgeHolding;
-    }
+    const { icon, label, color } = getStatusBadge(state.tier, state.durationMs);
 
     return (
-        <div className={`${styles.transitionBadge} ${className}`}>
-            <span className={styles.badgeEmoji}>{emoji}</span>
+        <div className={styles.transitionBadge} style={{ background: color }}>
+            <span className={styles.badgeEmoji}>{icon}</span>
             <span className={styles.badgeLabel}>{label}</span>
         </div>
     );
 }
 
 // ================================
-// DRAWING HELPERS
+// STATE MACHINE CHALLENGER CARD
 // ================================
 
-function hexToHSL(hex: string): { h: number; s: number; l: number } {
-    const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-    if (!result) return { h: 220, s: 50, l: 20 };
-
-    const r = parseInt(result[1], 16) / 255;
-    const g = parseInt(result[2], 16) / 255;
-    const b = parseInt(result[3], 16) / 255;
-
-    const max = Math.max(r, g, b), min = Math.min(r, g, b);
-    let h = 0, s = 0;
-    const l = (max + min) / 2;
-
-    if (max !== min) {
-        const d = max - min;
-        s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
-        switch (max) {
-            case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
-            case g: h = ((b - r) / d + 2) / 6; break;
-            case b: h = ((r - g) / d + 4) / 6; break;
-        }
-    }
-
-    return { h: h * 360, s: s * 100, l: l * 100 };
+interface SMChallengerCardProps {
+    challenger: ChallengerDisplay | null;
 }
 
-function drawBackground(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    color: string,
-    confidence: number
-) {
-    const hsl = hexToHSL(color);
-    const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w * 0.7);
+function SMChallengerCard({ challenger }: SMChallengerCardProps) {
+    if (!challenger) {
+        return (
+            <div className={styles.stateCard + ' ' + styles.noChallenger}>
+                <div className={styles.noChallengerContent}>
+                    <span className={styles.noChallengerIcon}>—</span>
+                    <span className={styles.noChallengerText}>No challenger</span>
+                    <span className={styles.challengerHint}>
+                        Another state will appear here when competing for dominance
+                    </span>
+                </div>
+            </div>
+        );
+    }
 
-    const sat = 10 + confidence * 18;
-    const light = 5 + confidence * 7;
+    const info = getStateInfo(challenger.id);
 
-    gradient.addColorStop(0, `hsl(${hsl.h}, ${sat}%, ${light + 4}%)`);
-    gradient.addColorStop(0.5, `hsl(${hsl.h + 12}, ${sat - 4}%, ${light}%)`);
-    gradient.addColorStop(1, `hsl(${hsl.h + 25}, ${sat - 8}%, ${light - 2}%)`);
+    return (
+        <div
+            className={styles.stateCard}
+            style={{ borderColor: challenger.color, opacity: 0.85 }}
+        >
+            <div className={styles.stateCardHeader}>
+                <StatePopover stateInfo={info} confidence={challenger.confidence}>
+                    <span className={styles.stateCardEmoji}>🧠</span>
+                </StatePopover>
+                <div className={styles.stateCardInfo}>
+                    <span className={styles.stateCardName}>{info.name}</span>
+                    <span className={styles.stateCardDesc} style={{ color: challenger.color }}>
+                        Challenger
+                    </span>
+                </div>
+            </div>
 
+            <div className={styles.confidenceRing}>
+                <svg viewBox="0 0 36 36" className={styles.ringCircle}>
+                    <circle className={styles.ringBg} cx="18" cy="18" r="15.9" />
+                    <circle
+                        className={styles.ringFill}
+                        cx="18" cy="18" r="15.9"
+                        style={{
+                            stroke: challenger.color,
+                            strokeDasharray: `${challenger.confidence}, 100`
+                        }}
+                    />
+                </svg>
+                <span className={styles.ringValue}>{challenger.confidence.toFixed(0)}</span>
+            </div>
+
+            <div className={styles.challengerConfidence}>
+                <span>{challenger.confidence.toFixed(0)}% confidence</span>
+            </div>
+
+            <div className={styles.challengerGap}>
+                Lead: {(challenger.leadDurationMs / 1000).toFixed(1)}s
+            </div>
+
+            {challenger.isCandidate && (
+                <div className={styles.contendingBadge}>
+                    ⚡ Candidate
+                </div>
+            )}
+        </div>
+    );
+}
+
+// ================================
+// HELPER FUNCTIONS
+// ================================
+
+function formatDuration(ms: number): string {
+    const seconds = Math.floor(ms / 1000);
+    if (seconds < 60) return `${seconds}s`;
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}m ${secs}s`;
+}
+
+function getTierProgress(tier: string, durationMs: number): number {
+    const CANDIDATE_MS = 6000;
+    const CONFIRMED_MS = 15000;
+    const LOCKED_MS = 30000;
+
+    if (tier === 'candidate') {
+        return Math.min(1, durationMs / CANDIDATE_MS);
+    } else if (tier === 'confirmed') {
+        return Math.min(1, (durationMs - CANDIDATE_MS) / (CONFIRMED_MS - CANDIDATE_MS));
+    } else if (tier === 'locked') {
+        return Math.min(1, (durationMs - CONFIRMED_MS) / (LOCKED_MS - CONFIRMED_MS));
+    }
+    return 0;
+}
+
+function getTierStyles(tier: string): { color: string; progressColor: string } {
+    switch (tier) {
+        case 'locked':
+            return { color: 'rgba(34, 197, 94, 0.25)', progressColor: '#22c55e' };
+        case 'confirmed':
+            return { color: 'rgba(234, 179, 8, 0.25)', progressColor: '#eab308' };
+        default:
+            return { color: 'rgba(255, 255, 255, 0.1)', progressColor: '#888' };
+    }
+}
+
+function getNextTierLabel(tier: string, durationMs: number): string {
+    const CANDIDATE_MS = 6000;
+    const CONFIRMED_MS = 15000;
+    const LOCKED_MS = 30000;
+
+    if (tier === 'candidate') {
+        const remaining = Math.max(0, CANDIDATE_MS - durationMs);
+        return remaining > 0 ? `Confirmed in ${(remaining / 1000).toFixed(0)}s` : 'Promoting...';
+    } else if (tier === 'confirmed') {
+        const remaining = Math.max(0, CONFIRMED_MS - durationMs);
+        return remaining > 0 ? `Locked in ${(remaining / 1000).toFixed(0)}s` : 'Locking...';
+    } else if (tier === 'locked') {
+        return '🔒 Fully Locked';
+    }
+    return '';
+}
+
+function getStatusBadge(tier: string, durationMs: number): { icon: string; label: string; color: string } {
+    if (tier === 'locked') {
+        return { icon: '🔒', label: 'STABLE', color: 'rgba(34, 197, 94, 0.3)' };
+    }
+    if (tier === 'confirmed') {
+        return { icon: '✓', label: 'CONFIRMING', color: 'rgba(234, 179, 8, 0.3)' };
+    }
+    if (durationMs > 3000) {
+        return { icon: '○', label: 'DETECTING', color: 'rgba(255, 255, 255, 0.15)' };
+    }
+    return { icon: '◌', label: 'SENSING', color: 'rgba(255, 255, 255, 0.1)' };
+}
+
+// ================================
+// CANVAS DRAWING FUNCTIONS
+// ================================
+
+class Particle {
+    x: number;
+    y: number;
+    baseX: number;
+    baseY: number;
+    size: number;
+    speed: number;
+    angle: number;
+    distance: number;
+    opacity: number;
+
+    constructor(width: number, height: number) {
+        this.baseX = Math.random() * width;
+        this.baseY = Math.random() * height;
+        this.x = this.baseX;
+        this.y = this.baseY;
+        this.size = Math.random() * 2 + 1;
+        this.speed = Math.random() * 0.5 + 0.1;
+        this.angle = Math.random() * Math.PI * 2;
+        this.distance = Math.random() * 50 + 20;
+        this.opacity = Math.random() * 0.5 + 0.3;
+    }
+
+    update(model: StateMachineOutput, width: number, height: number) {
+        const confidence = model.currentState.confidence / 100;
+        this.angle += this.speed * 0.02 * (1 + confidence);
+        this.x = this.baseX + Math.cos(this.angle) * this.distance * confidence;
+        this.y = this.baseY + Math.sin(this.angle) * this.distance * confidence;
+
+        if (this.x < 0 || this.x > width) this.baseX = Math.random() * width;
+        if (this.y < 0 || this.y > height) this.baseY = Math.random() * height;
+    }
+
+    draw(ctx: CanvasRenderingContext2D, model: StateMachineOutput) {
+        const color = model.currentState.color;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fillStyle = color.replace(')', `, ${this.opacity})`).replace('hsl', 'hsla');
+        ctx.fill();
+    }
+}
+
+function drawBackground(ctx: CanvasRenderingContext2D, w: number, h: number, color: string, confidence: number) {
+    const gradient = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+    gradient.addColorStop(0, `hsla(230, 20%, ${8 + confidence * 4}%, 1)`);
+    gradient.addColorStop(1, 'hsl(220, 25%, 4%)');
     ctx.fillStyle = gradient;
     ctx.fillRect(0, 0, w, h);
 }
 
-function drawWaves(
-    ctx: CanvasRenderingContext2D,
-    w: number,
-    h: number,
-    color: string,
-    confidence: number,
-    status: string // 'STABILIZING' | 'TRANSITION' | 'HOLDING'
-) {
-    const time = Date.now() / 1000;
-    const hsl = hexToHSL(color);
-
-    ctx.globalAlpha = status === 'STABILIZING' ? 0.12 : 0.06 + confidence * 0.06;
+function drawWaves(ctx: CanvasRenderingContext2D, w: number, h: number, color: string, confidence: number, status: string) {
+    const time = Date.now() * 0.001;
+    ctx.strokeStyle = color.replace(')', ', 0.1)').replace('hsl', 'hsla');
+    ctx.lineWidth = 1;
 
     for (let i = 0; i < 3; i++) {
         ctx.beginPath();
-        ctx.strokeStyle = `hsla(${hsl.h + i * 12}, 45%, 50%, ${0.1 + confidence * 0.06})`;
-        ctx.lineWidth = status === 'STABILIZING' ? 1.5 : 1;
-
-        const amplitude = 12 + i * 10 + confidence * 20;
-        const frequency = 0.25 + i * 0.12;
-        const speed = status === 'STABILIZING' ? 0.12 : 0.25 + confidence * 0.15;
-        const yOffset = h * 0.22 + i * (h * 0.18);
-
-        for (let x = 0; x < w; x += 4) {
-            const y = yOffset + Math.sin((x / w) * Math.PI * frequency * 4 + time * speed + i) * amplitude;
+        for (let x = 0; x <= w; x += 5) {
+            const y = h / 2 +
+                Math.sin(x * 0.01 + time + i) * (30 + confidence * 20) +
+                Math.sin(x * 0.02 + time * 1.5) * 15;
             if (x === 0) ctx.moveTo(x, y);
             else ctx.lineTo(x, y);
         }
         ctx.stroke();
     }
-
-    ctx.globalAlpha = 1;
 }
 
-function drawCenterOrb(
-    ctx: CanvasRenderingContext2D,
-    x: number,
-    y: number,
-    model: StateMachineOutput
-) {
-    const time = Date.now() / 1000;
+function drawConnections(ctx: CanvasRenderingContext2D, particles: Particle[], model: StateMachineOutput) {
     const color = model.currentState.color;
-    const hsl = hexToHSL(color);
-    const confidence = model.currentState.confidence / 100;
-    const tier = model.currentState.tier;
-
-    // Map tier to status for animation
-    const isStabilizing = tier === 'locked';
-    const isTransition = tier === 'confirmed' || tier === 'candidate';
-
-    let baseRadius = 45 + confidence * 25;
-    let pulseSpeed = 0.8;
-    let pulseAmount = 8;
-
-    if (isTransition) { pulseSpeed = 1.5; pulseAmount = 12; }
-    if (isStabilizing) { baseRadius += 15; pulseSpeed = 0.35; pulseAmount = 6; }
-    if (tier === 'detected') { pulseSpeed = 2; pulseAmount = 5; }
-
-    const pulse = Math.sin(time * pulseSpeed) * pulseAmount * confidence;
-    const radius = baseRadius + pulse;
-
-    const glowLayers = isStabilizing ? 4 : 2;
-    for (let i = glowLayers; i > 0; i--) {
-        const glowRadius = radius * (1 + i * 0.3);
-        const gradient = ctx.createRadialGradient(x, y, 0, x, y, glowRadius);
-        gradient.addColorStop(0, `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, ${0.18 / i})`);
-        gradient.addColorStop(1, 'transparent');
-
-        ctx.beginPath();
-        ctx.arc(x, y, glowRadius, 0, Math.PI * 2);
-        ctx.fillStyle = gradient;
-        ctx.fill();
-    }
-
-    const coreGradient = ctx.createRadialGradient(x - radius * 0.18, y - radius * 0.18, 0, x, y, radius);
-    coreGradient.addColorStop(0, `hsla(${hsl.h}, 75%, 78%, 1)`);
-    coreGradient.addColorStop(0.5, `hsla(${hsl.h}, ${hsl.s}%, ${hsl.l}%, 0.85)`);
-    coreGradient.addColorStop(1, `hsla(${hsl.h + 12}, ${hsl.s - 18}%, ${hsl.l - 12}%, 0.55)`);
-
-    ctx.beginPath();
-    ctx.arc(x, y, radius, 0, Math.PI * 2);
-    ctx.fillStyle = coreGradient;
-    ctx.fill();
-}
-
-function drawConnections(
-    ctx: CanvasRenderingContext2D,
-    particles: Particle[],
-    model: StateMachineOutput
-) {
-    const confidence = model.currentState.confidence / 100;
-    const maxDist = 45 + confidence * 30;
-    const hsl = hexToHSL(model.currentState.color);
-    const isStabilizing = model.currentState.tier === 'locked';
-
-    ctx.lineWidth = isStabilizing ? 0.8 : 0.4;
+    const maxDist = 80;
 
     for (let i = 0; i < particles.length; i++) {
         for (let j = i + 1; j < particles.length; j++) {
@@ -861,8 +879,9 @@ function drawConnections(
             const dist = Math.sqrt(dx * dx + dy * dy);
 
             if (dist < maxDist) {
-                const alpha = (1 - dist / maxDist) * 0.06 * confidence;
-                ctx.strokeStyle = `hsla(${hsl.h}, 38%, 52%, ${alpha})`;
+                const opacity = (1 - dist / maxDist) * 0.15;
+                ctx.strokeStyle = color.replace(')', `, ${opacity})`).replace('hsl', 'hsla');
+                ctx.lineWidth = 0.5;
                 ctx.beginPath();
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(particles[j].x, particles[j].y);
@@ -872,75 +891,31 @@ function drawConnections(
     }
 }
 
-// ================================
-// PARTICLE CLASS
-// ================================
+function drawCenterOrb(ctx: CanvasRenderingContext2D, x: number, y: number, model: StateMachineOutput) {
+    const color = model.currentState.color;
+    const confidence = model.currentState.confidence / 100;
+    const radius = 40 + confidence * 30;
+    const time = Date.now() * 0.001;
+    const pulse = Math.sin(time * 2) * 5 * confidence;
 
-class Particle {
-    x: number;
-    y: number;
-    vx: number;
-    vy: number;
-    radius: number;
-    hueOffset: number;
+    // Outer glow
+    const glowGradient = ctx.createRadialGradient(x, y, 0, x, y, radius * 2);
+    glowGradient.addColorStop(0, color.replace(')', ', 0.3)').replace('hsl', 'hsla'));
+    glowGradient.addColorStop(0.5, color.replace(')', ', 0.1)').replace('hsl', 'hsla'));
+    glowGradient.addColorStop(1, 'transparent');
+    ctx.fillStyle = glowGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius * 2 + pulse, 0, Math.PI * 2);
+    ctx.fill();
 
-    constructor(w: number, h: number) {
-        this.x = Math.random() * w;
-        this.y = Math.random() * h;
-        this.vx = (Math.random() - 0.5) * 1;
-        this.vy = (Math.random() - 0.5) * 1;
-        this.radius = Math.random() * 2 + 0.8;
-        this.hueOffset = Math.random() * 25 - 12;
-    }
-
-    update(model: StateMachineOutput, w: number, h: number) {
-        const tier = model.currentState.tier;
-        const isStabilizing = tier === 'locked';
-        const isTransition = tier === 'confirmed' || tier === 'candidate';
-
-        let speed = 0.3;
-        let chaos = 0.008;
-
-        if (isTransition) { speed = 0.45; chaos = 0.018; }
-        if (isStabilizing) {
-            speed = 0.18;
-            chaos = 0.004;
-            const cx = w / 2, cy = h / 2;
-            const dx = cx - this.x, dy = cy - this.y;
-            const dist = Math.sqrt(dx * dx + dy * dy);
-            if (dist > 60) {
-                this.vx += (dx / dist) * 0.006;
-                this.vy += (dy / dist) * 0.006;
-            }
-        }
-        if (tier === 'detected') { speed = 0.15; chaos = 0.003; }
-
-        this.vx += (Math.random() - 0.5) * chaos;
-        this.vy += (Math.random() - 0.5) * chaos;
-        this.vx *= 0.98;
-        this.vy *= 0.98;
-        this.x += this.vx * speed;
-        this.y += this.vy * speed;
-
-        if (this.x < 0) this.x = w;
-        if (this.x > w) this.x = 0;
-        if (this.y < 0) this.y = h;
-        if (this.y > h) this.y = 0;
-    }
-
-    draw(ctx: CanvasRenderingContext2D, model: StateMachineOutput) {
-        const color = model.currentState.color;
-        const hsl = hexToHSL(color);
-        const confidence = model.currentState.confidence / 100;
-        const isStabilizing = model.currentState.tier === 'locked';
-
-        const hue = hsl.h + this.hueOffset;
-        const size = this.radius * (0.75 + confidence * 0.3);
-        const alpha = isStabilizing ? 0.35 + confidence * 0.3 : 0.18 + confidence * 0.22;
-
-        ctx.beginPath();
-        ctx.arc(this.x, this.y, size, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${hue}, 45%, 52%, ${alpha})`;
-        ctx.fill();
-    }
+    // Core orb
+    const coreGradient = ctx.createRadialGradient(x, y, 0, x, y, radius + pulse);
+    coreGradient.addColorStop(0, 'white');
+    coreGradient.addColorStop(0.3, color);
+    coreGradient.addColorStop(1, color.replace(')', ', 0.5)').replace('hsl', 'hsla'));
+    ctx.fillStyle = coreGradient;
+    ctx.beginPath();
+    ctx.arc(x, y, radius + pulse, 0, Math.PI * 2);
+    ctx.fill();
 }
+
