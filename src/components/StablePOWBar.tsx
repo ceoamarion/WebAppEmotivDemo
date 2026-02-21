@@ -4,12 +4,16 @@
  * ALWAYS mounted - never conditionally rendered/unmounted.
  * Shows band power levels (Theta, Alpha, Beta-L, Beta-H, Gamma).
  * When data missing or stale, shows last-known values with stale indicator.
+ * 
+ * In Demo Mode (disconnected + data is live from simulation):
+ *   - Shows a subtle "DEMO" badge instead of the normal connection indicator
+ *   - Values animate smoothly from the Zustand store simulation
  */
 
 'use client';
 
 import React from 'react';
-import { useBandPower, useConnectionState } from '@/stores/sessionStore';
+import { useBandPower, useConnectionState, useDemoMode } from '@/stores/sessionStore';
 import styles from './StablePOWBar.module.css';
 
 const BAND_CONFIG = [
@@ -23,16 +27,25 @@ const BAND_CONFIG = [
 export function StablePOWBar() {
     const { power, stale, dominant } = useBandPower();
     const connection = useConnectionState();
+    const isDemoMode = useDemoMode();
 
     const isDisconnected = connection.state === 'disconnected';
 
     return (
-        <div className={`${styles.container} ${stale ? styles.stale : ''} ${isDisconnected ? styles.disconnected : ''}`}>
+        <div className={`${styles.container} ${stale ? styles.stale : ''} ${isDisconnected && stale ? styles.disconnected : ''}`}>
             {/* Connection Indicator */}
-            <div className={`${styles.connectionIndicator} ${styles[connection.state]}`}>
-                <span className={styles.connectionDot} />
-                <span className={styles.connectionLabel}>{connection.label}</span>
-            </div>
+            {isDemoMode ? (
+                // Cinematic DEMO badge — subtle, non-disruptive
+                <div className={styles.demoBadge} title="Simulated EEG data — connect a headset for live readings">
+                    <span className={styles.demoDot} />
+                    <span className={styles.demoLabel}>DEMO</span>
+                </div>
+            ) : (
+                <div className={`${styles.connectionIndicator} ${styles[connection.state]}`}>
+                    <span className={styles.connectionDot} />
+                    <span className={styles.connectionLabel}>{connection.label}</span>
+                </div>
+            )}
 
             {/* POW Label */}
             <span className={styles.powLabel} title="Band Power (relative, smoothed)">
@@ -56,7 +69,7 @@ export function StablePOWBar() {
                                 style={{
                                     width: `${Math.min(100, value * 100)}%`,
                                     backgroundColor: band.color,
-                                    opacity: stale ? 0.5 : 1,
+                                    opacity: stale ? 0.5 : isDemoMode ? 0.85 : 1,
                                 }}
                             />
                         </div>
@@ -78,8 +91,8 @@ export function StablePOWBar() {
                 </span>
             )}
 
-            {/* Disconnected Message */}
-            {isDisconnected && (
+            {/* Disconnected + stale = truly offline */}
+            {isDisconnected && stale && (
                 <span className={styles.disconnectedMessage}>
                     No data stream
                 </span>

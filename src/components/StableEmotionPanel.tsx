@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { useEmotions } from '@/stores/sessionStore';
+import { EmotionInfoTooltip } from './EmotionInfoTooltip';
 import styles from './StableEmotionPanel.module.css';
 
 interface EmotionPanelProps {
@@ -65,7 +66,14 @@ export function StableEmotionPanel({ collapsed = false, onToggle }: EmotionPanel
         <div className={`${styles.panel} ${stale ? styles.stale : ''}`}>
             {/* Header */}
             <div className={styles.header}>
-                <span className={styles.title}>Emotion State</span>
+                <div className={styles.titleRow}>
+                    <span className={styles.title}>Emotion State</span>
+                    <EmotionInfoTooltip axes={axes} topEmotions={top3} hasData={hasData}>
+                        <span className={styles.infoIcon} title="What do these values mean?">
+                            ℹ
+                        </span>
+                    </EmotionInfoTooltip>
+                </div>
                 {stale && <span className={styles.staleBadge}>⏳ Stale</span>}
                 {onToggle && (
                     <button className={styles.toggleBtn} onClick={onToggle} title="Collapse">

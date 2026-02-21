@@ -11,7 +11,8 @@
 /* Trigger Wrapper */
 .trigger {
     position: relative;
-    display: inline-block;
+    display: block;
+    width: 100%;
     cursor: pointer;
 }
 

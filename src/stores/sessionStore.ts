@@ -96,6 +96,9 @@ export interface SessionData {
     // Timestamps
     sessionStartAt: number | null;
     lastStateChangeAt: number;
+
+    // Demo mode flag
+    isDemoMode: boolean;
 }
 
 // ================================
@@ -149,6 +152,7 @@ interface SessionStore extends SessionData {
 
     // Actions
     setSessionActive: (active: boolean) => void;
+    setDemoMode: (isDemo: boolean) => void;
     receiveStreamPacket: (stream: string, data: unknown) => void;
     updateBandPower: (pow: Partial<BandPower>) => void;
     updateEmotions: (axes: Partial<EmotionAxes>, top3?: EmotionItem[]) => void;
@@ -351,6 +355,8 @@ const initialState: SessionData = {
 
     sessionStartAt: null,
     lastStateChangeAt: 0,
+
+    isDemoMode: false,
 };
 
 // ================================
@@ -373,6 +379,10 @@ export const useSessionStore = create<SessionStore>()(
                 connectionState: active ? 'connecting' : 'disconnected',
                 connectionLabel: active ? CONNECTION_LABELS.connecting : CONNECTION_LABELS.disconnected,
             }));
+        },
+
+        setDemoMode: (isDemo: boolean) => {
+            set({ isDemoMode: isDemo });
         },
 
         receiveStreamPacket: (stream: string, data: unknown) => {
@@ -634,6 +644,10 @@ export function useSensorQuality() {
         good: s.goodSensorCount,
         quality: s.device.eegQuality,
     })));
+}
+
+export function useDemoMode() {
+    return useSessionStore(s => s.isDemoMode);
 }
 
 export default useSessionStore;

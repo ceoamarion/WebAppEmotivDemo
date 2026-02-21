@@ -109,6 +109,48 @@
     animation: none;
 }
 
+/* ─── DEMO Badge ─── */
+.demoBadge {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    padding: 0.3rem 0.75rem;
+    background: rgba(124, 58, 237, 0.12);
+    border: 1px solid rgba(124, 58, 237, 0.35);
+    border-radius: 9999px;
+    font-size: 0.7rem;
+    font-weight: 600;
+}
+
+.demoDot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #7c3aed;
+    box-shadow: 0 0 6px rgba(124, 58, 237, 0.8);
+    animation: demoPulse 1.8s ease-in-out infinite;
+}
+
+@keyframes demoPulse {
+
+    0%,
+    100% {
+        opacity: 1;
+        box-shadow: 0 0 5px rgba(124, 58, 237, 0.7);
+    }
+
+    50% {
+        opacity: 0.6;
+        box-shadow: 0 0 12px rgba(124, 58, 237, 0.4);
+    }
+}
+
+.demoLabel {
+    color: #a78bfa;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+}
+
 /* POW Label */
 .powLabel {
     font-size: 0.65rem;

@@ -4,6 +4,7 @@
     height: calc(100vh - 120px);
     overflow: hidden;
     background: #080810;
+    isolation: isolate;
 }
 
 .canvas {
@@ -542,6 +543,118 @@
     font-size: 0.65rem;
     color: rgba(255, 255, 255, 0.25);
     text-align: center;
+}
+
+/* ================================
+   MISSING CARD SUBCOMPONENT STYLES
+   ================================ */
+
+.stateCardHeader {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    min-width: 0;
+}
+
+.stateCardEmoji {
+    font-size: 1.3rem;
+    flex-shrink: 0;
+    cursor: pointer;
+    transition: transform 0.2s ease;
+}
+
+.stateCardEmoji:hover {
+    transform: scale(1.15);
+}
+
+.stateCardInfo {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    min-width: 0;
+    overflow: hidden;
+}
+
+.stateCardName {
+    font-size: 1rem;
+    font-weight: 700;
+    color: white;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.stateCardDesc {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Duration box inside card */
+.durationBox {
+    display: flex;
+    align-items: baseline;
+    gap: 0.35rem;
+    margin-top: 0.1rem;
+}
+
+.durationValue {
+    font-size: 1.4rem;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: white;
+    letter-spacing: 0.02em;
+}
+
+.durationLabel {
+    font-size: 0.6rem;
+    color: rgba(255, 255, 255, 0.4);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+/* Ring SVG */
+.ringCircle {
+    width: 100%;
+    height: 100%;
+    transform: rotate(-90deg);
+}
+
+/* No challenger placeholder */
+.noChallenger {
+    border-style: dashed;
+    border-left-width: 1px;
+    opacity: 0.6;
+}
+
+/* Challenger gap info */
+.challengerGap {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.45);
+    font-style: italic;
+}
+
+/* Contending badge pulse */
+.contendingBadge {
+    margin-top: auto;
+    padding: 0.2rem 0.5rem;
+    background: rgba(245, 158, 11, 0.15);
+    color: #fcd34d;
+    border-radius: 0.25rem;
+    font-size: 0.6rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    width: fit-content;
+    animation: contendPulse 1.5s infinite;
+}
+
+/* Badge label (used in transitionBadge) */
+.badgeLabel {
+    font-size: 0.8rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: inherit;
 }
 
 .challengerConfidence {

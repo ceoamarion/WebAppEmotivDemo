@@ -1,0 +1,175 @@
+/**
+ * EmotionInfoTooltip Styles
+ * 
+ * Portal-rendered popover for the Emotion State panel hover info.
+ * Cinematic glass morphism to match the app aesthetic.
+ */
+
+/* Trigger wrapping element */
+.trigger {
+    display: inline-flex;
+    align-items: center;
+    cursor: pointer;
+}
+
+/* Floating popover */
+.popover {
+    z-index: 9999 !important;
+    background: rgba(8, 8, 20, 0.97);
+    backdrop-filter: blur(18px);
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 12px;
+    box-shadow:
+        0 4px 6px rgba(0, 0, 0, 0.35),
+        0 14px 44px rgba(0, 0, 0, 0.55),
+        0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+    min-width: 280px;
+    max-width: 340px;
+    animation: tooltipEnter 0.18s ease-out;
+    pointer-events: auto;
+}
+
+@keyframes tooltipEnter {
+    from {
+        opacity: 0;
+        transform: translateX(-4px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Floating UI arrow */
+.arrow {
+    fill: rgba(8, 8, 20, 0.97);
+    stroke: rgba(255, 255, 255, 0.12);
+    stroke-width: 1px;
+}
+
+/* Inner content */
+.content {
+    padding: 14px 16px;
+}
+
+/* Section title */
+.sectionTitle {
+    font-size: 9px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: rgba(255, 255, 255, 0.35);
+    margin-bottom: 10px;
+}
+
+/* Each axis block */
+.axisItem {
+    margin-bottom: 12px;
+}
+
+.axisHeader {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 3px;
+}
+
+.axisName {
+    font-size: 12px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.85);
+}
+
+.axisValue {
+    font-size: 12px;
+    font-weight: 700;
+    font-family: 'SF Mono', 'Consolas', monospace;
+}
+
+.axisDef {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.5);
+    line-height: 1.55;
+    margin: 0;
+}
+
+.axisDef em {
+    color: rgba(255, 255, 255, 0.65);
+    font-style: italic;
+}
+
+.axisDef strong {
+    color: rgba(255, 255, 255, 0.75);
+    font-weight: 600;
+}
+
+/* Divider */
+.divider {
+    border: none;
+    border-top: 1px solid rgba(255, 255, 255, 0.08);
+    margin: 12px 0;
+}
+
+/* Emotion rows */
+.emotionRow {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 6px;
+}
+
+.emotionRank {
+    flex: 0 0 14px;
+    font-size: 10px;
+    font-weight: 700;
+    color: rgba(255, 255, 255, 0.25);
+    text-align: center;
+}
+
+.emotionName {
+    flex: 0 0 72px;
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.emotionBarWrap {
+    flex: 1;
+    height: 4px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 9999px;
+    overflow: hidden;
+}
+
+.emotionBar {
+    height: 100%;
+    background: linear-gradient(90deg, #7c3aed, #a78bfa);
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+.emotionPct {
+    flex: 0 0 32px;
+    font-size: 10px;
+    font-weight: 600;
+    font-family: 'SF Mono', 'Consolas', monospace;
+    color: rgba(255, 255, 255, 0.55);
+    text-align: right;
+}
+
+/* No data state */
+.noData {
+    font-size: 11px;
+    color: rgba(255, 255, 255, 0.35);
+    font-style: italic;
+    margin-top: 8px;
+    text-align: center;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+    .popover {
+        min-width: 240px;
+        max-width: calc(100vw - 40px);
+    }
+}

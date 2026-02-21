@@ -91,8 +91,10 @@ export default function Experience() {
 
     // ZUSTAND STORE - Get data and actions (use stable function references)
     const setStoreSessionActive = useSessionStore(s => s.setSessionActive);
+    const setStoreDemoMode = useSessionStore(s => s.setDemoMode);
     const receiveStreamPacket = useSessionStore(s => s.receiveStreamPacket);
     const updateEmotions = useSessionStore(s => s.updateEmotions);
+    const updateBandPower = useSessionStore(s => s.updateBandPower);
     const resetSession = useSessionStore(s => s.resetSession);
     const storeTick = useSessionStore(s => s.tick);
 
@@ -132,6 +134,12 @@ export default function Experience() {
     useEffect(() => {
         setStoreSessionActive(isRunning);
     }, [isRunning, setStoreSessionActive]);
+
+    // Sync demo mode to store
+    useEffect(() => {
+        setStoreDemoMode(isDemo);
+        return () => { setStoreDemoMode(false); };
+    }, [isDemo, setStoreDemoMode]);
 
     // Sync emotions to store
     useEffect(() => {
@@ -188,27 +196,45 @@ export default function Experience() {
 
         if (demoIntervalRef.current) return;
 
+        // Smooth random-walk state for band power simulation
+        const smoothed = { theta: 0.3, alpha: 0.45, betaL: 0.3, betaH: 0.25, gamma: 0.15, delta: 0.1 };
+        const velocity = { theta: 0, alpha: 0, betaL: 0, betaH: 0, gamma: 0, delta: 0 };
+
         demoIntervalRef.current = setInterval(() => {
-            demoTimeRef.current += 0.1;
+            demoTimeRef.current += 0.15;
             const t = demoTimeRef.current;
 
-            const phase = (Math.sin(t * 0.02) + 1) / 2;
-            const subPhase = (Math.sin(t * 0.08) + 1) / 2;
-            const noise = () => (Math.random() - 0.5) * 0.06;
+            // Slow macro-phase: breathe between calm / focused / active states
+            const phase = (Math.sin(t * 0.018) + 1) / 2;          // 0..1 calm -> active
+            const subPhase = (Math.sin(t * 0.055 + 1.2) + 1) / 2; // 0..1 secondary oscillation
 
-            const pow = [
-                0.25 + phase * 0.45 + subPhase * 0.12 + noise(),
-                0.35 + (1 - phase) * 0.35 + subPhase * 0.15 + noise(),
-                0.30 - phase * 0.15 + noise(),
-                0.30 - phase * 0.20 + noise(),
-                0.15 + phase * 0.35 * subPhase + noise(),
-            ];
+            // Target band power values driven by phase
+            const targets = {
+                theta: 0.22 + (1 - phase) * 0.30 + subPhase * 0.08,  // high in calm
+                alpha: 0.30 + (1 - phase) * 0.38 + subPhase * 0.10,  // high in calm
+                betaL: 0.25 + phase * 0.28 + subPhase * 0.06,        // high in focus
+                betaH: 0.18 + phase * 0.22 + (1 - subPhase) * 0.05, // high in active
+                gamma: 0.10 + phase * 0.20 * subPhase,               // spikes when both high
+                delta: 0.08 + (1 - phase) * 0.12,
+            };
 
+            // Apply EMA-like smooth random walk toward target
+            const drift = 0.006;
+            const tension = 0.08;
+            for (const k of Object.keys(smoothed) as (keyof typeof smoothed)[]) {
+                velocity[k] = velocity[k] * 0.92 + (targets[k] - smoothed[k]) * tension + (Math.random() - 0.5) * drift;
+                smoothed[k] = Math.max(0.05, Math.min(0.99, smoothed[k] + velocity[k]));
+            }
+
+            // Write directly to Zustand store so the POW bar gets live values
+            updateBandPower({ ...smoothed });
+
+            // Also feed the legacy stream path for the state machine
             setSimulatedStreamData({
-                data: { pow },
+                data: [smoothed.theta, smoothed.alpha, smoothed.betaL, smoothed.betaH, smoothed.gamma] as unknown as Record<string, unknown>,
                 stream: 'pow',
             });
-        }, 100);
+        }, 150);
 
         return () => {
             if (demoIntervalRef.current) {
@@ -216,7 +242,7 @@ export default function Experience() {
                 demoIntervalRef.current = null;
             }
         };
-    }, [isDemo]);
+    }, [isDemo, updateBandPower]);
 
     // ================================
     // CANVAS ANIMATION
@@ -581,17 +607,17 @@ function SMCurrentStateCard({ state }: SMCurrentStateCardProps) {
 
     return (
         <div className={styles.stateCard} style={{ borderColor: state.color }}>
-            <div className={styles.stateCardHeader}>
-                <StatePopover stateInfo={info} confidence={state.confidence}>
+            <StatePopover stateInfo={info} confidence={state.confidence}>
+                <div className={styles.stateCardHeader}>
                     <span className={styles.stateCardEmoji}>🧠</span>
-                </StatePopover>
-                <div className={styles.stateCardInfo}>
-                    <span className={styles.stateCardName}>{info.name}</span>
-                    <span className={styles.stateCardDesc} style={{ color: state.color }}>
-                        {state.confidence.toFixed(0)}% confidence
-                    </span>
+                    <div className={styles.stateCardInfo}>
+                        <span className={styles.stateCardName}>{info.name}</span>
+                        <span className={styles.stateCardDesc} style={{ color: state.color }}>
+                            {state.confidence.toFixed(0)}% confidence
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </StatePopover>
 
             {/* Circular progress ring */}
             <div className={styles.confidenceRing}>
@@ -684,17 +710,17 @@ function SMChallengerCard({ challenger }: SMChallengerCardProps) {
             className={styles.stateCard}
             style={{ borderColor: challenger.color, opacity: 0.85 }}
         >
-            <div className={styles.stateCardHeader}>
-                <StatePopover stateInfo={info} confidence={challenger.confidence}>
+            <StatePopover stateInfo={info} confidence={challenger.confidence} status="challenger">
+                <div className={styles.stateCardHeader}>
                     <span className={styles.stateCardEmoji}>🧠</span>
-                </StatePopover>
-                <div className={styles.stateCardInfo}>
-                    <span className={styles.stateCardName}>{info.name}</span>
-                    <span className={styles.stateCardDesc} style={{ color: challenger.color }}>
-                        Challenger
-                    </span>
+                    <div className={styles.stateCardInfo}>
+                        <span className={styles.stateCardName}>{info.name}</span>
+                        <span className={styles.stateCardDesc} style={{ color: challenger.color }}>
+                            Challenger
+                        </span>
+                    </div>
                 </div>
-            </div>
+            </StatePopover>
 
             <div className={styles.confidenceRing}>
                 <svg viewBox="0 0 36 36" className={styles.ringCircle}>
