@@ -1,0 +1,120 @@
+.container {
+    display: flex;
+    flex-direction: column;
+    gap: 1.5rem;
+    /* space-y-6 */
+    width: 100%;
+    max-width: 24rem;
+    /* max-w-sm */
+    margin: 0 auto;
+    padding: 2rem;
+    background-color: #ffffff;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+    border-radius: 0.5rem;
+    /* rounded-lg */
+    color: #1f2937;
+    /* text-gray-800 */
+}
+
+.title {
+    font-size: 1.5rem;
+    /* text-2xl */
+    font-weight: 700;
+    /* font-bold */
+    text-align: center;
+    color: #1f2937;
+    margin: 0;
+}
+
+.error {
+    color: #ef4444;
+    /* text-red-500 */
+    font-size: 0.875rem;
+    /* text-sm */
+    text-align: center;
+}
+
+.fieldGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    /* space-y-2 */
+}
+
+.label {
+    font-size: 0.875rem;
+    /* text-sm */
+    font-weight: 500;
+    /* font-medium */
+    color: #374151;
+    /* text-gray-700 */
+}
+
+.input {
+    border: 1px solid #d1d5db;
+    /* border-gray-300 */
+    padding: 0.5rem 0.75rem;
+    /* px-3 py-2 */
+    border-radius: 0.375rem;
+    /* rounded-md */
+    font-size: 1rem;
+    width: 100%;
+}
+
+.input:focus {
+    outline: none;
+    border-color: #3b82f6;
+    /* focus:ring-blue-500 */
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.buttonGroup {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    /* space-y-3 */
+    padding-top: 0.5rem;
+}
+
+.loginButton {
+    background-color: #2563eb;
+    /* bg-blue-600 */
+    color: white;
+    padding: 0.5rem 1rem;
+    /* px-4 py-2 */
+    border-radius: 0.375rem;
+    /* rounded-md */
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.loginButton:hover {
+    background-color: #1d4ed8;
+    /* hover:bg-blue-700 */
+}
+
+.signupButton {
+    background-color: #f3f4f6;
+    /* bg-gray-100 */
+    color: #1f2937;
+    /* text-gray-800 */
+    padding: 0.5rem 1rem;
+    border-radius: 0.375rem;
+    font-weight: 500;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+.signupButton:hover {
+    background-color: #e5e7eb;
+    /* hover:bg-gray-200 */
+}
+
+.loginButton:disabled,
+.signupButton:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}

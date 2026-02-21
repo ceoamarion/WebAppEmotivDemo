@@ -10,6 +10,7 @@
 import React, { useState, useMemo } from 'react';
 import { createPortal } from 'react-dom';
 import { SessionRecord, saveSession } from '@/data/sessionStorage';
+import { saveSessionToSupabase } from '@/services/supabaseSessions';
 import styles from './SessionSummaryModal.module.css';
 
 interface SessionSummaryModalProps {
@@ -27,6 +28,7 @@ export function SessionSummaryModal({
 }: SessionSummaryModalProps) {
     const [notes, setNotes] = useState('');
     const [saving, setSaving] = useState(false);
+    const [cloudStatus, setCloudStatus] = useState<'idle' | 'saving' | 'saved' | 'error'>('idle');
 
     // Calculate summary stats
     const summary = useMemo(() => {
@@ -71,7 +73,16 @@ export function SessionSummaryModal({
     const handleSave = () => {
         setSaving(true);
         const recordWithNotes = notes ? { ...record, notes } : record;
+
+        // 1. Save to localStorage immediately (sync)
         saveSession(recordWithNotes);
+
+        // 2. Save to Supabase non-blocking
+        setCloudStatus('saving');
+        saveSessionToSupabase(recordWithNotes, (status) => {
+            setCloudStatus(status);
+        }).catch(() => setCloudStatus('error'));
+
         setSaving(false);
         onSave();
     };

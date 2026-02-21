@@ -5,12 +5,22 @@
  * A) Individual Sessions - list and detail view
  * B) Over-Time - trends across sessions
  * C) Overall Summary - aggregate stats
+ *
+ * Data source priority: Supabase (cloud) -> localStorage (offline fallback)
  */
 
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect, useCallback } from 'react';
 import { SessionRecord, loadAllSessions, deleteSession, exportSessionsJSON } from '@/data/sessionStorage';
+import {
+    loadSessionsFromSupabase,
+    loadSegmentsForSession,
+    deleteSessionFromSupabase,
+    SupabaseSession,
+    SupabaseSegment,
+} from '@/services/supabaseSessions';
+import { createClient } from '@/utils/supabase/client';
 import styles from './Records.module.css';
 
 // ================================
@@ -18,6 +28,7 @@ import styles from './Records.module.css';
 // ================================
 
 type ViewTab = 'sessions' | 'trends' | 'summary';
+type DataSource = 'cloud' | 'local' | 'loading';
 
 // ================================
 // COMPONENT
@@ -26,30 +37,68 @@ type ViewTab = 'sessions' | 'trends' | 'summary';
 export function Records() {
     const [activeView, setActiveView] = useState<ViewTab>('sessions');
     const [selectedSession, setSelectedSession] = useState<SessionRecord | null>(null);
-    const [sessions, setSessions] = useState<SessionRecord[]>(() => loadAllSessions());
+    const [selectedCloud, setSelectedCloud] = useState<SupabaseSession | null>(null);
+    const [cloudSegments, setCloudSegments] = useState<SupabaseSegment[]>([]);
+    const [sessions, setSessions] = useState<SessionRecord[]>([]);
+    const [cloudSessions, setCloudSessions] = useState<SupabaseSession[]>([]);
+    const [dataSource, setDataSource] = useState<DataSource>('loading');
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
-    const refreshSessions = () => setSessions(loadAllSessions());
+    const loadData = useCallback(async () => {
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        setIsLoggedIn(!!user);
 
-    const handleDelete = (id: string) => {
-        if (confirm('Delete this session?')) {
-            deleteSession(id);
-            refreshSessions();
-            if (selectedSession?.id === id) {
-                setSelectedSession(null);
+        if (user) {
+            const cloud = await loadSessionsFromSupabase();
+            if (cloud.length >= 0) {
+                setCloudSessions(cloud);
+                setDataSource('cloud');
+                return;
             }
+        }
+
+        // Fallback to localStorage
+        setSessions(loadAllSessions());
+        setDataSource('local');
+    }, []);
+
+    useEffect(() => {
+        loadData();
+    }, [loadData]);
+
+    const handleDelete = async (id: string) => {
+        if (!confirm('Delete this session?')) return;
+        if (dataSource === 'cloud') {
+            await deleteSessionFromSupabase(id);
+            setCloudSessions(prev => prev.filter(s => s.id !== id));
+            if (selectedCloud?.id === id) setSelectedCloud(null);
+        } else {
+            deleteSession(id);
+            setSessions(loadAllSessions());
+            if (selectedSession?.id === id) setSelectedSession(null);
         }
     };
 
     const handleExport = () => {
-        const json = exportSessionsJSON();
+        const data = dataSource === 'cloud' ? cloudSessions : sessions;
+        const json = JSON.stringify(data, null, 2);
         const blob = new Blob([json], { type: 'application/json' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `consciousness_explorer_records_${new Date().toISOString().split('T')[0]}.json`;
+        a.download = `emotiv_records_${new Date().toISOString().split('T')[0]}.json`;
         a.click();
         URL.revokeObjectURL(url);
     };
+
+    const handleSelectCloud = async (session: SupabaseSession) => {
+        setSelectedCloud(session);
+        const segs = await loadSegmentsForSession(session.id);
+        setCloudSegments(segs);
+    };
+
+    const totalCount = dataSource === 'cloud' ? cloudSessions.length : sessions.length;
 
     return (
         <div className={styles.container}>
@@ -57,8 +106,14 @@ export function Records() {
             <div className={styles.header}>
                 <h1 className={styles.title}>Records</h1>
                 <div className={styles.headerActions}>
-                    <span className={styles.sessionCount}>{sessions.length} session{sessions.length !== 1 ? 's' : ''}</span>
-                    <button className={styles.exportButton} onClick={handleExport} disabled={sessions.length === 0}>
+                    {dataSource === 'cloud' && (
+                        <span className={styles.cloudBadge}>☁ Cloud Synced</span>
+                    )}
+                    {dataSource === 'local' && isLoggedIn && (
+                        <span className={styles.offlineBadge}>⚠ Cloud sync unavailable</span>
+                    )}
+                    <span className={styles.sessionCount}>{totalCount} session{totalCount !== 1 ? 's' : ''}</span>
+                    <button className={styles.exportButton} onClick={handleExport} disabled={totalCount === 0}>
                         📥 Export JSON
                     </button>
                 </div>
@@ -68,53 +123,226 @@ export function Records() {
             <div className={styles.tabs}>
                 <button
                     className={`${styles.tab} ${activeView === 'sessions' ? styles.active : ''}`}
-                    onClick={() => { setActiveView('sessions'); setSelectedSession(null); }}
+                    onClick={() => { setActiveView('sessions'); setSelectedSession(null); setSelectedCloud(null); }}
                 >
                     📋 Sessions
                 </button>
                 <button
                     className={`${styles.tab} ${activeView === 'trends' ? styles.active : ''}`}
-                    onClick={() => { setActiveView('trends'); setSelectedSession(null); }}
+                    onClick={() => { setActiveView('trends'); setSelectedSession(null); setSelectedCloud(null); }}
                 >
                     📈 Trends
                 </button>
                 <button
                     className={`${styles.tab} ${activeView === 'summary' ? styles.active : ''}`}
-                    onClick={() => { setActiveView('summary'); setSelectedSession(null); }}
+                    onClick={() => { setActiveView('summary'); setSelectedSession(null); setSelectedCloud(null); }}
                 >
                     📊 Summary
                 </button>
             </div>
 
+            {/* Loading */}
+            {dataSource === 'loading' && (
+                <div className={styles.empty}><span className={styles.emptyText}>Loading records…</span></div>
+            )}
+
             {/* Content */}
-            <div className={styles.content}>
-                {sessions.length === 0 ? (
-                    <div className={styles.empty}>
-                        <span className={styles.emptyIcon}>📭</span>
-                        <span className={styles.emptyText}>No sessions recorded yet.</span>
-                        <span className={styles.emptyHint}>Complete a session and save it to see records here.</span>
-                    </div>
-                ) : (
-                    <>
-                        {activeView === 'sessions' && (
-                            <SessionsView
-                                sessions={sessions}
-                                selectedSession={selectedSession}
-                                onSelect={setSelectedSession}
-                                onDelete={handleDelete}
-                            />
-                        )}
-                        {activeView === 'trends' && <TrendsView sessions={sessions} />}
-                        {activeView === 'summary' && <SummaryView sessions={sessions} />}
-                    </>
-                )}
-            </div>
+            {dataSource !== 'loading' && (
+                <div className={styles.content}>
+                    {totalCount === 0 ? (
+                        <div className={styles.empty}>
+                            <span className={styles.emptyIcon}>📭</span>
+                            <span className={styles.emptyText}>No sessions recorded yet.</span>
+                            <span className={styles.emptyHint}>Complete a session and save it to see records here.</span>
+                        </div>
+                    ) : (
+                        <>
+                            {activeView === 'sessions' && (
+                                dataSource === 'cloud' ? (
+                                    <CloudSessionsView
+                                        sessions={cloudSessions}
+                                        selected={selectedCloud}
+                                        segments={cloudSegments}
+                                        onSelect={handleSelectCloud}
+                                        onBack={() => setSelectedCloud(null)}
+                                        onDelete={handleDelete}
+                                    />
+                                ) : (
+                                    <SessionsView
+                                        sessions={sessions}
+                                        selectedSession={selectedSession}
+                                        onSelect={setSelectedSession}
+                                        onDelete={handleDelete}
+                                    />
+                                )
+                            )}
+                            {activeView === 'trends' && <TrendsView sessions={dataSource === 'cloud' ? cloudSessions.map(cloudToLocal) : sessions} />}
+                            {activeView === 'summary' && <SummaryView sessions={dataSource === 'cloud' ? cloudSessions.map(cloudToLocal) : sessions} />}
+                        </>
+                    )}
+                </div>
+            )}
         </div>
     );
 }
 
 // ================================
-// SESSIONS VIEW
+// CLOUD -> LOCAL ADAPTER (for trends/summary views)
+// ================================
+
+function cloudToLocal(s: SupabaseSession): SessionRecord {
+    return {
+        id: s.id,
+        startedAt: s.started_at,
+        endedAt: s.ended_at,
+        durationSec: s.duration_sec,
+        stateTimeline: [],
+        timeByState: { [s.best_state]: s.best_state_duration_sec },
+        bestState: { stateId: s.best_state, sustainedSec: s.best_state_duration_sec, maxConfidence: 0 },
+        emotionTimeline: [],
+        emotionAverages: { valence: s.avg_valence, arousal: s.avg_arousal, control: s.avg_control },
+        mostCommonEmotions: [],
+        bandPowerTimeline: [],
+        bandPowerAverages: { theta: 0, alpha: 0, betaL: 0, betaH: 0, gamma: 0 },
+        artifactPct: 0,
+        stabilityPct: 0,
+        notes: s.notes ?? undefined,
+    };
+}
+
+// ================================
+// CLOUD SESSIONS VIEW
+// ================================
+
+function CloudSessionsView({
+    sessions,
+    selected,
+    segments,
+    onSelect,
+    onBack,
+    onDelete,
+}: {
+    sessions: SupabaseSession[];
+    selected: SupabaseSession | null;
+    segments: SupabaseSegment[];
+    onSelect: (s: SupabaseSession) => void;
+    onBack: () => void;
+    onDelete: (id: string) => void;
+}) {
+    const handleExportOne = (s: SupabaseSession) => {
+        const blob = new Blob([JSON.stringify(s, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `session_${s.id.slice(0, 8)}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+    };
+
+    if (selected) {
+        return (
+            <div className={styles.sessionDetail}>
+                <button className={styles.backButton} onClick={onBack}>← Back to Sessions</button>
+
+                <div className={styles.detailHeader}>
+                    <div>
+                        <h2 className={styles.detailDate}>
+                            {new Date(selected.started_at).toLocaleDateString(undefined, {
+                                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
+                            })}
+                        </h2>
+                        <span className={styles.detailTime}>
+                            {new Date(selected.started_at).toLocaleTimeString()} — {new Date(selected.ended_at).toLocaleTimeString()}
+                        </span>
+                    </div>
+                    <span className={styles.detailDuration}>{formatTime(selected.duration_sec)}</span>
+                </div>
+
+                <section className={styles.detailSection}>
+                    <h3>🏆 Best State</h3>
+                    <div className={styles.bestStateBox}>
+                        <span className={styles.bestStateName}>{formatStateName(selected.best_state)}</span>
+                        <span className={styles.bestStateDuration}>Sustained for {formatTime(selected.best_state_duration_sec)}</span>
+                    </div>
+                </section>
+
+                <section className={styles.detailSection}>
+                    <h3>💭 Emotional Averages</h3>
+                    <div className={styles.emotionGrid}>
+                        <div className={styles.emotionStat}>
+                            <span className={styles.emotionLabel}>Valence</span>
+                            <span className={styles.emotionValue}>{selected.avg_valence > 0 ? '+' : ''}{(selected.avg_valence * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className={styles.emotionStat}>
+                            <span className={styles.emotionLabel}>Arousal</span>
+                            <span className={styles.emotionValue}>{(selected.avg_arousal * 100).toFixed(0)}%</span>
+                        </div>
+                        <div className={styles.emotionStat}>
+                            <span className={styles.emotionLabel}>Control</span>
+                            <span className={styles.emotionValue}>{(selected.avg_control * 100).toFixed(0)}%</span>
+                        </div>
+                    </div>
+                </section>
+
+                {segments.length > 0 && (
+                    <section className={styles.detailSection}>
+                        <h3>🧠 State Timeline</h3>
+                        <div className={styles.stateBreakdown}>
+                            {segments.map((seg, i) => (
+                                <div key={i} className={styles.stateBarRow}>
+                                    <span className={styles.stateBarLabel}>{formatStateName(seg.state_name)}</span>
+                                    <div className={styles.stateBar}>
+                                        <div
+                                            className={styles.stateBarFill}
+                                            style={{ width: `${Math.min((seg.duration_sec / selected.duration_sec) * 100, 100)}%` }}
+                                        />
+                                    </div>
+                                    <span className={styles.stateBarTime}>{formatTime(seg.duration_sec)}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </section>
+                )}
+
+                {selected.notes && (
+                    <section className={styles.detailSection}>
+                        <h3>📝 Notes</h3>
+                        <p className={styles.notes}>{selected.notes}</p>
+                    </section>
+                )}
+
+                <div style={{ display: 'flex', gap: '0.75rem', marginTop: '1rem' }}>
+                    <button className={styles.exportButton} onClick={() => handleExportOne(selected)}>📥 Export JSON</button>
+                    <button className={styles.deleteButton} onClick={() => onDelete(selected.id)}>🗑️ Delete Session</button>
+                </div>
+            </div>
+        );
+    }
+
+    return (
+        <div className={styles.sessionsList}>
+            {sessions.map(session => (
+                <div key={session.id} className={styles.sessionCard} onClick={() => onSelect(session)}>
+                    <div className={styles.sessionHeader}>
+                        <span className={styles.sessionDate}>
+                            {new Date(session.started_at).toLocaleDateString()} at {new Date(session.started_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
+                        <span className={styles.sessionDuration}>{formatTime(session.duration_sec)}</span>
+                    </div>
+                    <div className={styles.sessionStats}>
+                        <span className={styles.sessionStat}>Best: <strong>{formatStateName(session.best_state)}</strong></span>
+                        <span className={styles.sessionStat}>
+                            V: {(session.avg_valence * 100).toFixed(0)}% | A: {(session.avg_arousal * 100).toFixed(0)}% | C: {(session.avg_control * 100).toFixed(0)}%
+                        </span>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
+
+// ================================
+// SESSIONS VIEW (local)
 // ================================
 
 function SessionsView({

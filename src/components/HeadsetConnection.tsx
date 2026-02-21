@@ -18,17 +18,21 @@ export default function HeadsetConnection() {
         disconnect
     } = useCortex();
 
-    const [clientId, setClientId] = useState('');
-    const [clientSecret, setClientSecret] = useState('');
+    const [clientId, setClientId] = useState(process.env.NEXT_PUBLIC_EMOTIV_CLIENT_ID || '');
+    const [clientSecret, setClientSecret] = useState(process.env.NEXT_PUBLIC_EMOTIV_CLIENT_SECRET || '');
     const [status, setStatus] = useState<string>('Idle');
     const [isLoading, setIsLoading] = useState(false);
 
-    // Load saved credentials
+    // Load saved credentials if env vars are missing
     useEffect(() => {
-        const savedClientId = localStorage.getItem('emotiv_clientId');
-        const savedClientSecret = localStorage.getItem('emotiv_clientSecret');
-        if (savedClientId) setClientId(savedClientId);
-        if (savedClientSecret) setClientSecret(savedClientSecret);
+        if (!process.env.NEXT_PUBLIC_EMOTIV_CLIENT_ID) {
+            const savedClientId = localStorage.getItem('emotiv_clientId');
+            if (savedClientId) setClientId(savedClientId);
+        }
+        if (!process.env.NEXT_PUBLIC_EMOTIV_CLIENT_SECRET) {
+            const savedClientSecret = localStorage.getItem('emotiv_clientSecret');
+            if (savedClientSecret) setClientSecret(savedClientSecret);
+        }
     }, []);
 
     const handleConnect = async () => {

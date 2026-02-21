@@ -1,0 +1,15 @@
+.pageContainer {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background-color: #f9fafb;
+    /* bg-gray-50 */
+}
+
+.formWrapper {
+    width: 100%;
+    max-width: 28rem;
+    /* max-w-md */
+    padding: 1rem;
+}
